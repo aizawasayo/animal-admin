@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html,body{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body >
+  <div style="width: 100%; height: 100%; background-color: brown;"></div>
+  <script>
+//  一个参数对应一个表达式 param => expression;
+// 例如 x => x+2;
+
+// 多个参数对应一个表达式 (param [, param]) => expression; 
+//例如 (x,y) => (x + y);
+
+// 一个参数对应多个表示式 param => {statements;} 
+//例如 x = > { x++; return x;};
+
+// 多个参数对应多个表达式 ([param] [, param]) => {statements} 
+// 例如 (x,y) => { x++;y++;return x*y;};
+
+//表达式里没有参数() => expression; 
+//例如 var flag = (() => 2)(); flag等于2 () => {statements;} //例如 var flag = (() => {return 1;})(); flag就等于1
+
+ //传入一个表达式，返回一个对象([param]) => ({ key: value });
+ //例如  var fuc = (x) => ({key:x})
+
+document.body.addEventListener('click', event=>console.log(this)); // window
+// document.body.addEventListener('click',function(event){console.log(this)});//body 
+ // EventObject, BodyElement
+
+ function fn() {
+    console.log(this.name);
+};
+let obj = {
+    //name: '行星飞行',
+    func: fn,
+};
+let obj1 = {
+    name: '听风是风',
+    o: obj
+};
+obj1.o.func() //行星飞行
+
+
+
+
+
+
+  </script>
+</body>
+</html>

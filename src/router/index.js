@@ -6,6 +6,12 @@ Vue.use(Router)
 /* Layout */
 import Layout from '@/layout'
 
+/* Router Modules */
+import archiveRouter from './modules/archive'
+import museumRouter from './modules/museum'
+import guideRouter from './modules/guide'
+import optionRouter from './modules/option'
+
 /**
  * Note: sub-menu only appear when route children.length >= 1
  * Detail see: https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -25,15 +31,30 @@ import Layout from '@/layout'
   }
  */
 
+
 /**
  * constantRoutes
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
-export const constantRoutes = [
+export const constantRoutes = [{
+    path: '/redirect',
+    component: Layout,
+    hidden: true,
+    children: [{
+      path: '/redirect/:path(.*)',
+      component: () => import('@/views/redirect/index')
+    }]
+  },
   {
     path: '/login',
     component: () => import('@/views/login/index'),
+    hidden: true
+  },
+
+  {
+    path: '/auth-redirect',
+    component: () => import('@/views/login/auth-redirect'),
     hidden: true
   },
 
@@ -49,125 +70,157 @@ export const constantRoutes = [
     redirect: '/dashboard',
     children: [{
       path: 'dashboard',
-      name: 'Dashboard',
+      name: 'home',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      meta: {
+        title: '首页',
+        icon: 'home'
+      }
     }]
   },
-
   {
-    path: '/example',
+    path: '/community',
     component: Layout,
-    redirect: '/example/table',
-    name: 'Example',
-    meta: { title: 'Example', icon: 'example' },
-    children: [
-      {
-        path: 'table',
-        name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
-      },
-      {
-        path: 'tree',
-        name: 'Tree',
-        component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
-      }
-    ]
-  },
-
-  {
-    path: '/form',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: 'Form',
-        component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
-      }
-    ]
-  },
-
-  {
-    path: '/nested',
-    component: Layout,
-    redirect: '/nested/menu1',
-    name: 'Nested',
+    redirect: '/community/turnip',
+    name: 'community',
     meta: {
-      title: 'Nested',
-      icon: 'nested'
+      title: '交流区',
+      icon: 'example'
     },
-    children: [
-      {
-        path: 'menu1',
-        component: () => import('@/views/nested/menu1/index'), // Parent router-view
-        name: 'Menu1',
-        meta: { title: 'Menu1' },
-        children: [
-          {
-            path: 'menu1-1',
-            component: () => import('@/views/nested/menu1/menu1-1'),
-            name: 'Menu1-1',
-            meta: { title: 'Menu1-1' }
-          },
-          {
-            path: 'menu1-2',
-            component: () => import('@/views/nested/menu1/menu1-2'),
-            name: 'Menu1-2',
-            meta: { title: 'Menu1-2' },
-            children: [
-              {
-                path: 'menu1-2-1',
-                component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
-                name: 'Menu1-2-1',
-                meta: { title: 'Menu1-2-1' }
-              },
-              {
-                path: 'menu1-2-2',
-                component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-                name: 'Menu1-2-2',
-                meta: { title: 'Menu1-2-2' }
-              }
-            ]
-          },
-          {
-            path: 'menu1-3',
-            component: () => import('@/views/nested/menu1/menu1-3'),
-            name: 'Menu1-3',
-            meta: { title: 'Menu1-3' }
-          }
-        ]
+    children: [{
+        path: 'board',
+        name: 'board',
+        component: () => import('@/views/community/board'),
+        meta: {
+          title: '森友墙',
+          icon: 'board'
+        }
+      }, {
+        path: 'turnip',
+        name: 'turnip',
+        component: () => import('@/views/community/turnip'),
+        meta: {
+          title: '菜市场',
+          icon: 'rutabaga'
+        }
       },
       {
-        path: 'menu2',
-        component: () => import('@/views/nested/menu2/index'),
-        meta: { title: 'menu2' }
+        path: 'trade',
+        name: 'trade',
+        component: () => import('@/views/community/trade'),
+        meta: {
+          title: '交易区',
+          icon: 'exchange'
+        }
       }
     ]
   },
-
   {
-    path: 'external-link',
+    path: '/design',
     component: Layout,
-    children: [
-      {
-        path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-        meta: { title: 'External Link', icon: 'link' }
+    children: [{
+      path: 'index',
+      name: 'design',
+      component: () => import('@/views/design/index'),
+      meta: {
+        title: '服装图案管理',
+        icon: 'dashboard',
       }
-    ]
+    }]
   },
-
-  // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+  // {
+  //   path: '/design',
+  //   component: Layout,
+  //   redirect: '/design/index',
+  //   name: 'design',
+  //   meta: {
+  //     title: '服装图案管理',
+  //     icon: 'dashboard'
+  //   },
+  //   children: [{
+  //       path: 'hats',
+  //       name: 'hats',
+  //       component: () => import('@/views/tree/index'),
+  //       meta: {
+  //         title: '帽子',
+  //         icon: 'hat'
+  //       }
+  //     },
+  //     {
+  //       path: 'clothes',
+  //       name: 'clothes',
+  //       component: () => import('@/views/tree/index'),
+  //       meta: {
+  //         title: '衣服',
+  //         icon: 'theme'
+  //       }
+  //     },
+  //     {
+  //       path: 'pattern',
+  //       name: 'pattern',
+  //       component: () => import('@/views/tree/index'),
+  //       meta: {
+  //         title: '图案',
+  //         icon: 'pattern'
+  //       }
+  //     }
+  //   ]
+  // },
 ]
 
-const createRouter = () => new Router({
-  // mode: 'history', // require service support
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
-})
+/**
+ * asyncRoutes
+ * the routes that need to be dynamically loaded based on user roles
+ */
+export const asyncRoutes = [{
+    path: '/user',
+    component: Layout,
+    children: [{
+      path: 'index',
+      name: 'user',
+      component: () => import('@/views/user/index'),
+      meta: {
+        title: '用户管理',
+        icon: 'user',
+        roles: ['admin']
+      }
+    }]
+  },
+  {
+    path: '/islander',
+    component: Layout,
+    children: [{
+      path: 'index',
+      name: 'islander',
+      component: () => import('@/views/archive/islander/index'),
+      meta: {
+        title: '岛民',
+        icon: 'people',
+        roles: ['admin']
+      }
+    }]
+  },
+  museumRouter,
+  archiveRouter,
+  guideRouter,
+  optionRouter,
+  // 404 page must be placed at the end !!!
+  {
+    path: '*',
+    redirect: '/404',
+    hidden: true
+  }
+]
+
+
+const createRouter = () =>
+  new Router({
+    // mode: 'history', // require service support
+    scrollBehavior: () => ({
+      y: 0
+    }),
+    routes: constantRoutes
+  })
 
 const router = createRouter()
 

@@ -1,0 +1,565 @@
+<template>
+  <div class="app-container">
+    <el-row class="search-box" type="flex" justify="space-between">
+      <el-col :span="16">
+        <el-row :gutter="24">
+          <el-col :span="16">
+            <el-input
+              v-model="queryInfo.query"
+              placeholder="请输入DIY配方关键字"
+              class="input-with-select"
+              clearable
+              @clear="fetchData"
+              @keyup.enter.native="fetchData('new')"
+            >
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+            </el-input>
+          </el-col>
+          <el-col :span="8">
+            <el-button type="primary" @click="openAddRecipe">添加DIY配方</el-button>
+          </el-col>
+        </el-row>
+      </el-col>
+      <el-col :span="8" class="flex-right">
+        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
+          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
+        </el-select> -->
+        <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
+      </el-col>
+    </el-row>
+    <el-table
+      v-loading="listLoading"
+      :data="list"
+      element-loading-text="Loading"
+      border
+      fit
+      highlight-current-row
+      :empty-text="emptyText"
+      @selection-change="handleSelectionChange"
+      @filter-change="filterChange"
+      @sort-change="sortChange"
+    >
+      <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
+      <el-table-column align="center" label="序号" width="55">
+        <template slot-scope="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="照片" width="60" prop="photoSrc" sortable="custom">
+        <template slot-scope="scope">
+          <img v-if="scope.row.photoSrc" :src="apiUrl + scope.row.photoSrc" width="25" height="25" />
+          <span v-else>未上传</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="名称" align="center" prop="name" sortable="custom">
+        <template slot-scope="scope">
+          {{ scope.row.name }}
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="价格" align="center" width="100" column-key="price" >
+        <template slot-scope="scope">
+          {{ scope.row.price }}
+        </template>
+      </el-table-column> -->
+      <el-table-column label="英文名" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.engName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="日文名" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.jpnName | jpnFilter }}
+        </template>
+      </el-table-column>
+      <el-table-column label="种类" align="center" column-key="type" :filters="typeList">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in scope.row.type" :key="'type' + index">{{ index === scope.row.type.length - 1 ? item : item + '/' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="来源" align="center" column-key="channels" :filters="channelList">
+        <template slot-scope="scope">
+          <span v-if="scope.row.activity">{{ scope.row.activity }}期间</span>
+          <span v-if="scope.row.season">{{ scope.row.season }}</span>
+          <!-- <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
+            index === scope.row.season.length - 1 ? item : item + '/'
+          }}</span> -->
+          <span v-if="scope.row.character">({{ scope.row.character }}性格)</span>
+          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
+            index === scope.row.channels.length - 1 ? item : item + '/'
+          }}</span>
+          <span v-if="scope.row.npc">({{ scope.row.npc }})</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="占地面积" align="center" prop="size" sortable="custom" column-key="size" :filters="sizeList">
+        <template slot-scope="scope">
+          {{ scope.row.fsize }}
+        </template>
+      </el-table-column>
+      <el-table-column label="合成材料" align="center">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in scope.row.materials" :key="'materials' + index">{{
+            index === scope.row.materials.length - 1 ? item.name + '*' + item.num : item.name + '*' + item.num + '+'
+          }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="解锁条件" width="50" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.unlockCondition ? '有' : '无' }}
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="操作" width="150" align="center">
+        <template slot-scope="scope">
+          <el-button type="primary" icon="el-icon-edit" size="small" @click="handleEdit(scope.row._id)"></el-button>
+          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id)"></el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
+    <el-dialog title="添加DIY配方" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+      <el-form ref="newRecipeRef" :inline="false" :model="newRecipe" :rules="newRecipeRules" label-width="80px">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="名称" prop="name">
+              <el-input v-model="newRecipe.name" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="英文名" prop="engName">
+              <el-input v-model="newRecipe.engName" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="日文名" prop="jpnName">
+              <el-input v-model="newRecipe.jpnName" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="种类" prop="type">
+              <el-select v-model="newRecipe.type" multiple collapse-tags placeholder="请选择种类">
+                <el-option v-for="item in typeList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="来源(多选)" prop="">
+              <el-select v-model="newRecipe.channels" multiple collapse-tags placeholder="请选择获取途径">
+                <el-option v-for="item in channelList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" v-show="isNpc">
+            <el-form-item label="npc" prop="npc">
+              <el-select v-model="newRecipe.npc" placeholder="请选择来源npc">
+                <el-option v-for="item in npcList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" v-show="isIslander">
+            <el-form-item label="岛民性格" prop="character">
+              <el-select v-model="newRecipe.character" placeholder="请选择来源岛民性格">
+                <el-option v-for="item in characterType" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="季节限定" prop="season">
+              <el-select v-model="newRecipe.season" placeholder="请选择出现季节">
+                <el-option v-for="item in seasonList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8" v-show="isActivity">
+            <el-form-item label="所属活动" prop="activity">
+              <el-select v-model="newRecipe.activity" placeholder="请选择所属活动">
+                <el-option v-for="item in activityList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="占地面积" prop="size">
+              <el-select v-model="newRecipe.size" placeholder="请选择占地面积">
+                <el-option v-for="item in sizeList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="解锁要求" prop="unlockCondition">
+              <el-select v-model="newRecipe.unlockCondition" placeholder="请选择解锁条件">
+                <el-option v-for="item in unlockConditionList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="照片" prop="photoSrc">
+              <el-upload
+                ref="upload"
+                :action="uploadUrl"
+                name="photoSrc"
+                :multiple="false"
+                :with-credentials="true"
+                :show-file-list="true"
+                :on-remove="handleRemove"
+                :on-success="handleSuccess"
+              >
+                <el-button size="small" type="success" v-if="this.newRecipe.photoSrc">已上传，可点击修改</el-button>
+                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="4">
+            <el-form-item label="合成配方" prop="materials" label-width="80px"> </el-form-item>
+          </el-col>
+          <el-col :span="10" v-for="(item, i) in newRecipe.materials" :key="'materials' + i">
+            <el-form-item :label="'材料' + (i + 1)" prop="" label-width="80px">
+              <el-col :span="12">
+                <el-select
+                  v-model="newRecipe.materials[i]"
+                  :remote-method="getMaterialList"
+                  filterable
+                  default-first-option
+                  remote
+                  value-key="name"
+                  placeholder="查询材料"
+                >
+                  <el-option v-for="item1 in materialList" :key="item1.name" :label="item1.name" :value="item1" />
+                </el-select>
+              </el-col>
+              <el-col :span="12">
+                <el-input-number size="medium" v-model="item.num" style="width: 90%; margin-left: 10px;"></el-input-number>
+              </el-col>
+            </el-form-item>
+          </el-col>
+          <el-col :span="4" class="addMaterialsBtn">
+            <el-button size="mini" round style="margin-top: 0.3rem; margin-left: 0.5rem;" @click="addMaterials"
+              ><i class="el-icon-plus el-icon--left"></i>增加材料</el-button
+            >
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogAddVisible = false">取 消</el-button>
+        <el-button type="primary" @click="postRecipe">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import Vue from 'vue'
+import { mapState } from 'vuex'
+import Pagination from '@/components/Pagination'
+import { getRecipes, addRecipe, getRecipe, deleteRecipe, searchRecipe } from '@/api/recipe'
+import { searchMaterial } from '@/api/material'
+import { searchFurniture } from '@/api/furniture'
+import { searchClothing } from '@/api/clothing'
+//import { searchTool } from '@/api/tool'
+import getOption from '@/utils/get-option'
+
+export default {
+  components: { Pagination },
+  filters: {
+    jpnFilter(text) {
+      let jpnText = ''
+      if (text && text.length > 5) {
+        jpnText = text.substring(0, 5) + '...'
+      }
+      return jpnText
+    }
+  },
+  data() {
+    return {
+      list: null,
+      listLoading: true,
+      queryInfo: {
+        query: '',
+        page: 1, // 当前的页数
+        pageSize: 10, // 当前每页显示多少条数据
+        sortJson: {},
+        sort: ''
+      },
+      total: 0,
+      dialogAddVisible: false,
+      emptyText: '没有相关数据',
+      newRecipe: {
+        name: '',
+        engName: '',
+        jpnName: '',
+        type: '',
+        activity: '',
+        npc: '',
+        season: '',
+        character: '',
+        materials: [
+          { photoSrc: '', num: 1, name: '' },
+          { photoSrc: '', num: 1, name: '' },
+          { photoSrc: '', num: 1, name: '' }
+        ],
+        size: '',
+        channels: [],
+        unlockCondition: null,
+        photoSrc: ''
+      },
+      materialList: [],
+      sizeList: [],
+      typeList: [],
+      activityList: [
+        //活动列表
+        { text: '无', value: '' },
+        { text: '樱花季', value: '樱花季' },
+        { text: '复活节', value: '复活节' },
+        { text: '枫叶季', value: '枫叶季' },
+        { text: '婚礼季', value: '婚礼季' },
+        { text: '蘑菇季', value: '蘑菇季' },
+        { text: '圣诞节', value: '圣诞节' }
+      ],
+      seasonList: [
+        { text: '春季', value: '春季' },
+        { text: '夏季', value: '夏季' },
+        { text: '秋季', value: '秋季' },
+        { text: '冬季', value: '冬季' }
+      ],
+      characterType: [
+        //岛民性格
+        { text: '元气', value: '元气' },
+        { text: '成熟', value: '成熟' },
+        { text: '大姐姐', value: '大姐姐' },
+        { text: '自恋', value: '自恋' },
+        { text: '运动', value: '运动' },
+        { text: '悠闲', value: '悠闲' },
+        { text: '暴躁', value: '暴躁' },
+        { text: '普通', value: '普通' }
+      ],
+      npcList: [
+        { text: '狸克', value: '狸克' },
+        { text: '西施惠', value: '西施惠' },
+        { text: '傅珂', value: '傅珂' },
+        { text: '傅达', value: '傅达' },
+        { text: '雪人', value: '雪人' },
+        { text: '巴猎', value: '巴猎' },
+        { text: '蹦蹦', value: '蹦蹦' },
+        { text: '健兆', value: '健兆' },
+        { text: '阿獭', value: '阿獭' }
+      ],
+      channelList: [
+        //获取途径
+        // { text: '漂流瓶', value: '漂流瓶' },
+        // { text: '气球', value: '气球' },
+        // { text: '商店购买', value: '商店购买' },
+        // { text: '狸端机兑换', value: '狸端机兑换' },
+        // { text: '岛民赠送', value: '岛民赠送' },
+        // { text: 'npc赠送', value: 'npc赠送' },
+        // { text: '彩蛋获得时随机顿悟', value: '彩蛋获得时随机顿悟' },
+        // { text: '集齐所有活动DIY手册', value: '集齐所有活动DIY手册' },
+        // { text: '集齐所有活动外装手册', value: '集齐所有活动外装手册' },
+        // { text: '流星雨当晚与傅珂对话', value: '流星雨当晚与傅珂对话' },
+        // { text: '用虾夷扇贝交换随机得到', value: '用虾夷扇贝交换随机得到' },
+        // { text: '堆出完美雪人', value: '堆出完美雪人' },
+        // { text: '灵感', value: '灵感' }
+      ],
+      unlockConditionList: [
+        { text: '无', value: '' },
+        { text: '总DIY数量满50次', value: '50' },
+        { text: '总DIY数量满100次', value: '100' },
+        { text: '总DIY数量满200次', value: '200' }
+      ],
+      newRecipeRules: {
+        name: [
+          { required: true, message: '请输入配方名', trigger: 'blur' },
+          { min: 1, max: 8, message: '长度在 1 到 8 个字符', trigger: 'blur' }
+        ]
+      },
+      multipleSelection: []
+    }
+  },
+  computed: {
+    // 获取app模块的uploadUrl的三种方式
+    // ...mapState(['app']), //使用是app.uploadUrl
+    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
+    // ...mapGetters(['uploadUrl']), //推荐这种
+    apiUrl() {
+      return process.env.VUE_APP_BASE_API
+    },
+    isNpc() {
+      let isNpc = this.newRecipe.channels.includes('npc赠送')
+      return isNpc
+    },
+    isIslander() {
+      let isIslander = this.newRecipe.channels.includes('岛民赠送')
+      return isIslander
+    },
+    isActivity() {
+      let isActivity = this.newRecipe.type.includes('活动限定')
+      return isActivity
+    }
+  },
+  created() {
+    this.fetchData()
+    this.getOptions()
+  },
+  methods: {
+    fetchData(param) {
+      this.listLoading = true
+      if (param === 'new') {
+        this.queryInfo.page = 1
+      }
+      getRecipes(this.queryInfo).then(response => {
+        this.list = response.data.records
+        this.total = response.data.total
+        this.listLoading = false
+      })
+    },
+    getOptions() {
+      getOption('diyType', list => {
+        this.typeList = list
+      })
+      getOption('diyChannels', list => {
+        this.channelList = list
+      })
+      getOption('size', list => {
+        this.sizeList = list
+      })
+      getOption('diyUnlock', list => {
+        //this.sizeList = list
+      })
+    },
+    getMaterialList(query) {
+      searchMaterial(query).then(response => {
+        if (!response.data) return
+        this.materialList = response.data.map(v => {
+          return { name: v.name, _id: v._id, photoSrc: v.photoSrc, num: 1 }
+        })
+        if (this.materialList.length === 0) {
+          searchFurniture(query).then(res => {
+            if (!res.data) return
+            this.materialList = res.data.map(w => {
+              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+            })
+            if (this.materialList.length === 0) {
+              searchClothing(query).then(res => {
+                if (!res.data) return
+                this.materialList = res.data.map(w => {
+                  return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+                })
+                if (this.materialList.length === 0) {
+                  searchRecipe(query).then(res => {
+                    if (!res.data) return
+                    this.materialList = res.data.map(w => {
+                      return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+                    })
+                  })
+                }
+              })
+            }
+          })
+        }
+      })
+    },
+    addMaterials() {
+      this.newRecipe.materials.push({ photoSrc: '', num: 1, name: '' })
+    },
+
+    handleRemove(file) {
+      this.newRecipe.photoSrc = ''
+    },
+    handleSuccess(res) {
+      // 图片上传成功后把临时地址保存到表单photoSrc属性中
+      let src = res.data.path
+      src = src.replace('/public', '')
+      this.newRecipe.photoSrc = src
+    },
+    openAddRecipe() {
+      this.dialogAddVisible = true
+      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
+      this.$nextTick(function () {
+        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
+        this.$refs['newRecipeRef'].resetFields()
+      })
+    },
+    dialogAddClose() {
+      this.$refs.newRecipeRef.resetFields()
+      this.$refs.upload.clearFiles()
+      delete this.newRecipe._id
+      delete this.newRecipe.__v
+      this.materialList = []
+    },
+    filterChange(filter) {
+      Object.assign(this.queryInfo, filter)
+      this.fetchData('new')
+    },
+    sortChange(sortInfo) {
+      let order = sortInfo.order
+      order === 'ascending' ? (order = 1) : (order = -1)
+      this.queryInfo.sortJson = {}
+      this.queryInfo.sortJson[sortInfo.prop] = order
+      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
+      this.fetchData('new')
+    },
+    postRecipe() {
+      this.newRecipe.materials = this.newRecipe.materials.filter(m => m.name !== '')
+      this.$refs.newRecipeRef.validate(valid => {
+        if (!valid) return this.$message.error('请修改有误的表单项')
+        addRecipe(this.newRecipe).then(res => {
+          this.$message({ message: res.message, type: 'success' })
+          this.$refs.upload.clearFiles()
+          this.dialogAddVisible = false
+          // if (!this.newRecipe._id) this.queryInfo.page = 1
+          this.fetchData()
+        })
+      })
+    },
+    handleEdit(id) {
+      if (this.$refs['newRecipeRef']) {
+        this.$refs['newRecipeRef'].resetFields()
+      }
+      getRecipe(id).then(res => {
+        this.dialogAddVisible = true
+        // 回显数据
+        this.$nextTick(function () {
+          this.newRecipe = res.data
+          this.materialList = this.newRecipe.materials
+        })
+      })
+    },
+    handleDelete(id) {
+      // 删除岛民方法，可批量
+      this.$confirm('此操作将永久删除该配方, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          deleteRecipe(id).then(res => {
+            this.$message({ type: 'success', message: res.message })
+            this.fetchData()
+          })
+        })
+        .catch(() => {
+          this.$message({ type: 'info', message: '已取消删除' })
+        })
+    },
+    handleSelectionChange(val) {
+      // 监听多选并给多选数组赋值
+      this.multipleSelection = val
+    },
+    handelMultipleDelete() {
+      // 批量删除岛民
+      if (this.multipleSelection.length === 0) {
+        return this.$message({
+          type: 'warning',
+          message: '请先选中至少一条数据！'
+        })
+      }
+      let id = ''
+      this.multipleSelection.forEach(val => {
+        id += val._id + ','
+      })
+      id = id.substring(0, id.length - 1)
+      this.handleDelete(id)
+    }
+  }
+}
+</script>
+
+<style scoped></style>

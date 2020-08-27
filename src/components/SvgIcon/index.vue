@@ -11,16 +11,7 @@ import { isExternal } from '@/utils/validate'
 
 export default {
   name: 'SvgIcon',
-  props: {
-    iconClass: {
-      type: String,
-      required: true
-    },
-    className: {
-      type: String,
-      default: ''
-    }
-  },
+  props: { iconClass: { type: String, required: true }, className: { type: String, default: '' }},
   computed: {
     isExternal() {
       return isExternal(this.iconClass)
@@ -36,10 +27,7 @@ export default {
       }
     },
     styleExternalIcon() {
-      return {
-        mask: `url(${this.iconClass}) no-repeat 50% 50%`,
-        '-webkit-mask': `url(${this.iconClass}) no-repeat 50% 50%`
-      }
+      return { mask: `url(${this.iconClass}) no-repeat 50% 50%`, '-webkit-mask': `url(${this.iconClass}) no-repeat 50% 50%` }
     }
   }
 }
@@ -56,7 +44,7 @@ export default {
 
 .svg-external-icon {
   background-color: currentColor;
-  mask-size: cover!important;
+  mask-size: cover !important;
   display: inline-block;
 }
 </style>
