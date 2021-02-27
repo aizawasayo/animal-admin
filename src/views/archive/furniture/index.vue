@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -74,21 +71,13 @@
       </el-table-column>
       <el-table-column label="类型" align="center" column-key="type" :filters="typeList">
         <template slot-scope="scope">
-          <span v-for="(item, index) in scope.row.type" :key="'type' + index">{{ index === scope.row.type.length - 1 ? item : item + '/' }}</span>
+          {{ scope.row.type.join('/') }}
         </template>
       </el-table-column>
       <el-table-column label="获取途径" align="center" column-key="channels" :filters="channelList">
         <template slot-scope="scope">
           <span v-if="scope.row.activity">{{ scope.row.activity }}/</span>
-          <span v-if="scope.row.season">{{ scope.row.season }}</span>
-          <!-- <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
-            index === scope.row.season.length - 1 ? item : item + '/'
-          }}</span> -->
-          <span v-if="scope.row.character">({{ scope.row.character }}性格)</span>
-          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
-            index === scope.row.channels.length - 1 ? item : item + '/'
-          }}</span>
-          <span v-if="scope.row.npc">({{ scope.row.npc }})</span>
+          <span> {{ scope.row.channels.join('/') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="系列" align="center" prop="series" column-key="series" :filters="seriesList">
@@ -101,7 +90,7 @@
           {{ scope.row.size }}
         </template>
       </el-table-column>
-      <el-table-column label="改造类型" align="center" prop="remould" column-key="size" :filters="sizeList">
+      <el-table-column label="改造类型" align="center" prop="remould" column-key="size" :filters="remouldList">
         <template slot-scope="scope">
           {{ scope.row.remould }}
         </template>
@@ -156,13 +145,6 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <!-- <el-col :span="8" v-show="isNpc">
-            <el-form-item label="npc" prop="npc">
-              <el-select v-model="newFurniture.npc" placeholder="请选择来源npc">
-                <el-option v-for="item in npcList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col> -->
           <el-col :span="8">
             <el-form-item label="改造类型" prop="remould">
               <el-select v-model="newFurniture.remould" placeholder="请选择改造类型">
@@ -240,6 +222,7 @@ import { getFurnitureList, addFurniture, getFurniture, deleteFurniture, searchFu
 import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Furniture',
   components: { Pagination },
   filters: {
     jpnFilter(text) {
@@ -273,9 +256,8 @@ export default {
         type: ['家具'],
         remould: '多颜色', // 能否改造
         orderType: '订购', //订购类型
-        npc: '',
         character: '',
-        series: [], //所属系列
+        series: '', //所属系列
         size: '1.0×1.0', //占地面积
         activity: '',
         channels: ['Nook商店'], //获取途径
@@ -310,14 +292,6 @@ export default {
       ],
       channelList: [
         //获取途径
-        // { text: '岛民赠送', value: '岛民赠送' },
-        // { text: 'npc赠送', value: 'npc赠送' },
-        // { text: '彩蛋获得时随机顿悟', value: '彩蛋获得时随机顿悟' },
-        // { text: '集齐所有活动DIY手册', value: '集齐所有活动DIY手册' },
-        // { text: '集齐所有活动外装手册', value: '集齐所有活动外装手册' },
-        // { text: '流星雨当晚与傅珂对话', value: '流星雨当晚与傅珂对话' },
-        // { text: '用虾夷扇贝交换随机得到', value: '用虾夷扇贝交换随机得到' },
-        // { text: '堆出完美雪人', value: '堆出完美雪人' },
       ],
       newFurnitureRules: {
         name: [
@@ -333,10 +307,6 @@ export default {
     // ...mapGetters(['uploadUrl']), //推荐这种
     apiUrl() {
       return process.env.VUE_APP_BASE_API
-    },
-    isNpc() {
-      let isNpc = this.newFurniture.channels.includes('npc赠送')
-      return isNpc
     }
   },
   created() {

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html,body{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body >
+  <div style="width: 100%; height: 50%; background-color: brown;"></div>
+  <div style="width: 100%; height: 50%; background-color: burlywood;"></div>
+  <script>
+    const test = {
+  name: 'test object',
+  createAnonFunction: function() {
+    return function() {
+      console.log(this.name);
+      console.log(arguments);
+    };
+  },
+ 
+  createArrowFunction: function() {
+    return () => {
+      console.log(this.name);
+      console.log(arguments);
+    };
+  },
+  myAnon: function(){
+    console.log(arguments);
+  },
+  myArrow: () =>{
+    console.log(arguments);
+  }
+  
+};
+test.createAnonFunction('hello', 'world')();
+test.createArrowFunction('hello', 'world')();
+ 
+test.myAnon('hello', 'world')
+test.myArrow('hello', 'world')
+  </script>
+</body>
+</html>

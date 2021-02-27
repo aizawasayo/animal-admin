@@ -6,7 +6,7 @@ const archiveRouter = {
   path: '/archive',
   component: Layout,
   redirect: '/archive/furniture',
-  name: 'archive',
+  name: 'Archive',
   meta: {
     title: '图鉴管理',
     icon: 'component',
@@ -14,8 +14,8 @@ const archiveRouter = {
   },
   children: [{
       path: 'furniture',
-      component: () => import('@/views/archive/furniture/index'),
-      name: 'furniture',
+      component: () => import('@/views/archive/furniture'),
+      name: 'Furniture',
       meta: {
         title: '家具',
         icon: 'fish',
@@ -24,8 +24,8 @@ const archiveRouter = {
     },
     {
       path: 'clothing',
-      component: () => import('@/views/archive/clothing/index'),
-      name: 'clothing',
+      component: () => import('@/views/archive/clothing'),
+      name: 'Clothing',
       meta: {
         title: '服饰',
         icon: 'dress',
@@ -34,8 +34,8 @@ const archiveRouter = {
     },
     {
       path: 'plant',
-      component: () => import('@/views/archive/plant/index'),
-      name: 'plant',
+      component: () => import('@/views/archive/plant'),
+      name: 'Plant',
       meta: {
         title: '植物',
         icon: 'plant',
@@ -44,8 +44,8 @@ const archiveRouter = {
     },
     {
       path: 'material',
-      component: () => import('@/views/archive/material/index'),
-      name: 'material',
+      component: () => import('@/views/archive/material'),
+      name: 'Material',
       meta: {
         title: '素材',
         icon: 'shell',
@@ -54,8 +54,8 @@ const archiveRouter = {
     },
     {
       path: 'tool',
-      component: () => import('@/views/archive/tool/index'),
-      name: 'tool',
+      component: () => import('@/views/archive/tool'),
+      name: 'Tool',
       meta: {
         title: '工具',
         icon: 'tool',
@@ -64,8 +64,8 @@ const archiveRouter = {
     },
     {
       path: 'recipe',
-      component: () => import('@/views/archive/recipe/index'),
-      name: 'recipe',
+      component: () => import('@/views/archive/recipe'),
+      name: 'Recipe',
       meta: {
         title: 'DIY配方',
         icon: 'book',
@@ -74,8 +74,8 @@ const archiveRouter = {
     },
     {
       path: 'record',
-      component: () => import('@/views/archive/record/index'),
-      name: 'record',
+      component: () => import('@/views/archive/record'),
+      name: 'Record',
       meta: {
         title: '唱片',
         icon: 'record',

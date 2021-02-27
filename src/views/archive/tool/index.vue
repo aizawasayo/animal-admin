@@ -81,9 +81,7 @@
       <el-table-column label="获取途径" align="center" column-key="channel" :filters="channelList">
         <template slot-scope="scope">
           <span v-if="scope.row.activity">{{ scope.row.activity }}/</span>
-          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
-            index === scope.row.channels.length - 1 ? item : item + '/'
-          }}</span>
+          <span>{{ scope.row.channels.join('/') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="途径详情" align="center">
@@ -188,6 +186,7 @@ import getOption from '@/utils/get-option'
 import { getTools, addTool, getTool, deleteTool } from '@/api/tool'
 
 export default {
+  name: 'Tool',
   components: { Pagination },
   filters: {
     jpnFilter(text) {

@@ -6,17 +6,14 @@
           <el-col :span="16">
             <el-input
               v-model="queryKey"
-              placeholder="请输入选项关键字"
+              placeholder="请输入评论关键字"
               class="input-with-select"
               clearable
-              @clear="fetchOptionData"
-              @keyup.enter.native="fetchOptionData"
+              @clear="fetchDesignData"
+              @keyup.enter.native="fetchDesignData"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchOptionData"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchDesignData"></el-button>
             </el-input>
-          </el-col>
-          <el-col :span="8">
-            <el-button type="primary" @click="openAddOption">添加选项</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -26,45 +23,34 @@
     </el-row>
     <el-tabs v-model="activeName" style="margin-top: 15px;" type="card">
       <el-tab-pane v-for="(item, i) in tabOptions" :key="item.key" :label="item.label" :name="item.key">
+        <span slot="label"> {{ item.label }} </span>
         <keep-alive>
-          <option-list ref="optionList" :type="item.key" :queryKey="queryKey" @paneEdit="handleEdit(arguments)" />
+          <comment-list ref="designList" :type="item.key" :queryKey="queryKey" />
         </keep-alive>
       </el-tab-pane>
     </el-tabs>
-    <add-option
-      ref="addOptionRef"
-      :visible.sync="dialogAddVisible"
-      :option="newOption"
-      :tab-list="tabOptions"
-      @freshData="fetchOptionData"
-      @closeDialog="hideDialog"
-    ></add-option>
   </div>
 </template>
 
 <script>
-import OptionList from '../components/OptionList'
-import AddOption from '../components/AddOption'
+import CommentList from '../components/CommentList'
 import { mapState } from 'vuex'
-import { getOption, deleteOption } from '@/api/option'
+import { getDesign } from '@/api/design'
 
 export default {
-  name: 'OptionIndex',
-  components: { OptionList, AddOption },
+  name: 'CommentIndex',
+  components: { CommentList },
   props: ['tabOptions', 'activeTab'],
   data() {
     return {
       activeName: this.activeTab,
       queryKey: '',
       dialogAddVisible: false,
-      newOption: {
+      newDesign: {
         name: '',
         type: '',
-        orderNum: null,
-        position: '',
-        duration: null,
-        icon: '',
-        color: ''
+        photoSrc: [],
+        content: ''
       },
       multipleSelection: []
     }
@@ -93,35 +79,11 @@ export default {
     }
   },
   methods: {
-    openAddOption() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      // this.$nextTick(function () {
-      let type = this.tabOptions[this.tabIndex].key
-      this.newOption = {
-        name: '',
-        type: type,
-        orderNum: null,
-        position: '',
-        duration: null,
-        icon: '',
-        color: ''
-      }
-      //})
-    },
-    handleEdit(arg) {
-      let id = arg[0]
-      let type = arg[1]
-      getOption(id).then(res => {
-        this.dialogAddVisible = true
-        this.newOption = res.data
-      })
-    },
     handelMultipleDelete() {
-      this.$refs.optionList[this.tabIndex].handelMultipleDelete()
+      this.$refs.designList[this.tabIndex].handelMultipleDelete()
     },
-    fetchOptionData() {
-      this.$refs.optionList[this.tabIndex].fetchData()
+    fetchDesignData() {
+      this.$refs.designList[this.tabIndex].fetchData()
     },
     hideDialog() {
       this.dialogAddVisible = false

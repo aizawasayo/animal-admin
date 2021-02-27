@@ -4,19 +4,12 @@
       <el-col :span="16">
         <el-row :gutter="24">
           <el-col :span="16">
-            <el-input
-              v-model="queryInfo.query"
-              placeholder="请输入关键字"
-              class="input-with-select"
-              clearable
-              @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
-            >
+            <el-input v-model="queryInfo.query" placeholder="请输入标题关键字" class="input-with-select" clearable @clear="fetchData">
               <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddBoard">添加</el-button>
+            <el-button type="primary" @click="openAddBanner">添加焦点图</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -25,7 +18,7 @@
       </el-col>
     </el-row>
     <el-table
-      v-loading="listLoading"
+      v-loading="loading"
       :data="list"
       element-loading-text="Loading"
       border
@@ -42,187 +35,188 @@
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column align="center" label="照片" width="60" prop="photoSrc">
+      <el-table-column align="center" label="图片" width="80">
         <template slot-scope="scope">
-          <img v-if="scope.row.photoSrc.length > 0 && scope.row.photoSrc[0].src" :src="apiUrl + scope.row.photoSrc[0].src" width="25" height="25" />
+          <img v-if="scope.row.avatar" :src="apiUrl + scope.row.avatar" width="25" height="25" />
           <span v-else>未上传</span>
         </template>
       </el-table-column>
-      <el-table-column label="话题" align="center" column-key="topic" :filters="topicList">
+      <el-table-column label="标题" align="center" prop="title" sortable="custom">
         <template slot-scope="scope">
-          {{ scope.row.topic }}
+          {{ scope.row.title }}
         </template>
       </el-table-column>
-      <el-table-column label="详情" align="center">
+      <el-table-column label="链接" align="center" prop="link" sortable="custom">
         <template slot-scope="scope">
-          {{ scope.row.content | textFilter }}
+          {{ scope.row.link }}
+        </template>
+      </el-table-column>
+      <el-table-column label="发布日期" align="center" sortable="custom" prop="created_time">
+        <template slot-scope="scope">
+          {{ scope.row.created_time | parseTime('{y}-{m}-{d}') }}
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="90" align="center" prop="state" column-key="state" :filters="stateList" sortable="custom">
+        <template slot-scope="scope">
+          {{ scope.row.state === 0 ? '启用' : '禁用' }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" size="small" @click="handleEdit(scope.row._id)"></el-button>
-          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id)"></el-button>
+          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id, scope.row.role)"></el-button>
         </template>
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="发布信息" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
-      <el-form ref="newBoardRef" :inline="false" :model="newBoard" :rules="newBoardRules" label-width="80px">
+    <el-dialog title="添加焦点图" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+      <el-form ref="newBannerRef" :inline="false" :model="newBanner" :rules="newBannerRules" label-width="80px">
         <el-row>
-          <el-col :span="8">
-            <el-form-item label="话题" prop="topic">
-              <el-select v-model="newBoard.topic" collapse-tags placeholder="请选择话题">
-                <el-option v-for="item in topicList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
-              </el-select>
+          <el-col :span="24">
+            <el-form-item label="标题" prop="title">
+              <el-input v-if="newBanner._id" v-model="newBanner.title" disabled="" />
+              <el-input v-else v-model="newBanner.title" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="链接" prop="link">
+              <el-input v-model="newBanner.link" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="照片" prop="photoSrc">
+            <el-form-item label="状态" prop="state">
+              <el-radio-group v-model="newBanner.state">
+                <el-radio :label="0">启用</el-radio>
+                <el-radio :label="1">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="图片" prop="avatar">
               <el-upload
                 ref="upload"
                 :action="uploadUrl"
-                name="photoSrc"
-                :multiple="true"
+                name="avatar"
+                :multiple="false"
                 :with-credentials="true"
-                :file-list="newBoard.photoSrc"
                 :show-file-list="true"
                 :on-remove="handleRemove"
                 :on-success="handleSuccess"
               >
-                <el-button size="small" type="success" v-if="newBoard.photoSrc[0]">已上传，可点击修改</el-button>
+                <el-button size="small" type="success" v-if="this.newBanner.avatar">已上传，可点击修改</el-button>
                 <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
               </el-upload>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item prop="content">
-              <el-input v-model="newBoard.content" type="textarea" placeholder="把你想分享的说出来吧" />
             </el-form-item>
           </el-col>
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogAddVisible = false">取 消</el-button>
-        <el-button type="primary" @click="postBoard">确 定</el-button>
+        <el-button type="primary" @click="postBanner">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
-import { getBoardList, addBoard, getBoard, deleteBoard } from '@/api/board'
-import { getOptionList } from '@/api/option'
-import getOption from '@/utils/get-option'
+import { getBanners, addBanner, getBanner, deleteBanner } from '@/api/banner'
 
 export default {
-  name: 'Board',
+  name: 'Banner',
   components: { Pagination },
-  filters: {
-    textFilter(text) {
-      let shortText = text
-      if (text && text.length > 30) {
-        shortText = text.substring(0, 30) + '...'
-      }
-      return shortText
-    }
-  },
   data() {
+    const checkPass = (rule, value, callback) => {
+      // 至少8个字符，至少1个大写字母，1个小写字母和1个数字,不能包含特殊字符（非数字字母）：
+      // ^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
+      const reg = new RegExp(/^[a-zA-Z0-9]{8,16}$/)
+      if (!value) {
+        callback(new Error('密码不能为空'))
+      } else if (!reg.test(value)) {
+        callback(new Error('密码不符合规则'))
+      } else {
+        callback()
+      }
+    }
     return {
       list: null,
-      listLoading: true,
+      loading: true,
       queryInfo: {
         query: '',
         page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        pageSize: 8, // 当前每页显示多少条数据
         sortJson: {},
         sort: ''
       },
       total: 0,
       dialogAddVisible: false,
       emptyText: '没有相关数据',
-      uploadList: [], // 自定义的数组，用于处理fileList，fileList是只读的
-      topicList: [],
-      topicOption: [],
-      newBoard: {
-        user: '',
-        topic: '', // 话题
-        content: '', // 详细内容
-        photoSrc: [],
-        icon: '',
-        color: ''
+      newBanner: {
+        title: '',
+        link: '',
+        avatar: '',
+        state: 0
       },
-      newBoardRules: {
-        topic: [{ required: true, message: '请选择话题', trigger: 'change' }]
+      stateList: [
+        { text: '启用', value: 0 },
+        { text: '禁用', value: 1 }
+      ],
+      newBannerRules: {
+        title: [
+          { required: true, message: '请输入标题', trigger: 'blur' },
+          { min: 6, max: 30, message: '长度在 6 到 30 个字符', trigger: 'blur' }
+        ]
       },
       multipleSelection: []
     }
   },
   computed: {
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    ...mapGetters(['userId', 'roles']), //推荐这种
+    uploadUrl() {
+      const url = process.env.VUE_APP_BASE_API + '/admin/user/upload'
+      return url
+    },
     apiUrl() {
       return process.env.VUE_APP_BASE_API
     }
   },
   created() {
     this.fetchData()
-    this.getOptions()
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (this.roles[0] === 'normal') {
-        this.queryInfo.user = this.userId
-      }
+      this.loading = true
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getBoardList(this.queryInfo).then(response => {
-        this.list = response.data.records
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
-    },
-    getOptions() {
-      getOption('topic', list => {
-        this.topicList = list
-      })
-      getOptionList({ type: 'topic' }).then(response => {
-        this.topicOption = response.data
+      getBanners(this.queryInfo).then(res => {
+        this.list = res.data.records
+        this.total = res.data.total
+        this.loading = false
       })
     },
     handleRemove(file) {
       // 移除上传的图片
-      let removePath = file.src
-      //removePath = removePath.replace('/public', '')
       // 找出pics数组中要移除这项的索引
-      let removeIndex = this.newBoard.photoSrc.findIndex(item => item.src === removePath)
-      this.newBoard.photoSrc.splice(removeIndex)
+      this.newBanner.avatar = ''
     },
     handleSuccess(res) {
-      const files = res.data
-      const pic = files[0]
-      let src = pic.path
-      const name = pic.name
+      let src = res.data.path
       src = src.replace('/public', '')
-      const newPic = { name: name, src: src }
-      this.uploadList.push(newPic)
+      this.newBanner.avatar = src
     },
-    openAddBoard() {
+    openAddBanner() {
       this.dialogAddVisible = true
       // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
       this.$nextTick(function () {
         // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newBoardRef'].resetFields()
+        this.$refs['newBannerRef'].resetFields()
       })
     },
     dialogAddClose() {
-      this.$refs.newBoardRef.resetFields()
+      this.$refs.newBannerRef.resetFields()
       this.$refs.upload.clearFiles()
-      delete this.newBoard._id
-      delete this.newBoard.__v
+      delete this.newBanner._id
+      delete this.newBanner.__v
     },
     filterChange(filter) {
       Object.assign(this.queryInfo, filter)
@@ -236,49 +230,46 @@ export default {
       this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
       this.fetchData('new')
     },
-    postBoard() {
-      this.$refs.newBoardRef.validate(valid => {
-        this.newBoard.photoSrc = this.newBoard.photoSrc.concat(this.uploadList)
-        this.addTopicInfo()
-        this.uploadList = []
+    postBanner() {
+      // 新增用户
+      this.$refs.newBannerRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        this.newBoard.user = this.$store.getters.userId
-        addBoard(this.newBoard).then(res => {
+        addBanner(this.newBanner).then(res => {
           this.$message({ message: res.message, type: 'success' })
           this.$refs.upload.clearFiles()
           this.dialogAddVisible = false
-          // if (!this.newBoard._id) this.queryInfo.page = 1
+          this.queryInfo.page = 1
           this.fetchData()
         })
       })
     },
     handleEdit(id) {
-      if (this.$refs['newBoardRef']) {
-        this.$refs['newBoardRef'].resetFields()
+      if (this.$refs['newBannerRef']) {
+        this.$refs['newBannerRef'].resetFields()
       }
-      getBoard(id).then(res => {
+      // 查询并编辑用户信息
+      getBanner(id).then(res => {
         this.dialogAddVisible = true
         // 回显数据
         this.$nextTick(function () {
-          this.newBoard = res.data
+          this.newBanner = res.data
         })
       })
     },
-    handleDelete(id) {
-      // 删除可批量
-      this.$confirm('此操作将永久删除该工具, 是否继续?', '提示', {
+    handleDelete(id, role) {
+      this.$confirm('此操作将永久删除该焦点图, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
         .then(() => {
-          deleteBoard(id).then(res => {
+          deleteBanner(id).then(res => {
             this.$message({ type: 'success', message: res.message })
             this.fetchData()
           })
         })
         .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
+          this.$message({ type: 'error', message: '删除失败' })
         })
     },
     handleSelectionChange(val) {
@@ -294,28 +285,15 @@ export default {
         })
       }
       let id = ''
+      let role = ''
       this.multipleSelection.forEach(val => {
         id += val._id + ','
+        role += val.role + ','
       })
       id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
-    },
-    addTopicInfo() {
-      let topicName = this.newBoard.topic
-      let topicInfo = this.topicOption.filter(item => item.name === topicName)
-      this.newBoard.icon = topicInfo[0].icon
-      this.newBoard.color = topicInfo[0].color
+      this.handleDelete(id, role)
     }
   }
 }
 </script>
-
-<style scoped>
-.el-date-editor.el-input,
-.el-date-editor.el-input__inner {
-  width: 100%;
-}
-.el-input-number--medium {
-  width: 50%;
-}
-</style>
+<style scoped></style>

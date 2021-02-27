@@ -1,3 +1,4 @@
+<!--富文本右上角自定义按钮上传组件-->
 <template>
   <div class="upload-container">
     <el-button :style="{ background: color, borderColor: color }" icon="el-icon-upload" size="mini" type="primary" @click="dialogVisible = true">
@@ -71,13 +72,14 @@ export default {
       this.dialogVisible = false
     },
     handleSuccess(response, file) {
-      let fileSrc = response.data.path
+      let fileSrc = response.data[0].path
       fileSrc = fileSrc.replace('/public', '')
       const uid = file.uid
       const objKeyArr = Object.keys(this.listObj)
       for (let i = 0, len = objKeyArr.length; i < len; i++) {
         if (this.listObj[objKeyArr[i]].uid === uid) {
-          this.listObj[objKeyArr[i]].url = process.env.VUE_APP_BASE_API + fileSrc
+          // this.listObj[objKeyArr[i]].url = 'http://106.54.168.208:1016' + fileSrc
+          this.listObj[objKeyArr[i]].url = process.env.VUE_APP_REAL_API + fileSrc
           this.listObj[objKeyArr[i]].hasSuccess = true
           return
         }

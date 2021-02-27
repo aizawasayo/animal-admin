@@ -70,23 +70,18 @@
       </el-table-column> -->
       <el-table-column label="种类" align="center" column-key="type" :filters="typeList">
         <template slot-scope="scope">
-          <span v-for="(item, index) in scope.row.type" :key="'type' + index">{{ index === scope.row.type.length - 1 ? item : item + '/' }}</span>
+          {{ scope.row.type.join('/') }}
         </template>
       </el-table-column>
       <el-table-column label="来源" align="center" column-key="channel" :filters="channelList">
         <template slot-scope="scope">
-          <!-- <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
-            index === scope.row.season.length - 1 ? item : item + '/'
-          }}</span> -->
           {{ scope.row.channel }}
         </template>
       </el-table-column>
       <el-table-column label="成长阶段" align="center">
         <template slot-scope="scope">
           <span v-if="!(scope.row.type.includes('种子') || scope.row.type.includes('树苗'))">
-            <span v-for="(item, index) in scope.row.growStage" :key="'growStage' + index" v-show="item !== ''">{{
-              index === scope.row.growStage.length - 1 ? item : item + '-'
-            }}</span>
+            <span>{{ scope.row.growStage.join('-') }}</span>
           </span>
         </template>
       </el-table-column>
@@ -187,7 +182,6 @@
             </el-form-item>
           </el-col>
           <!-- </div> -->
-
           <el-col :span="2">
             <el-form-item label="成长阶段" label-width="80px"> </el-form-item>
           </el-col>
@@ -215,6 +209,7 @@ import Pagination from '@/components/Pagination'
 import { getPlants, addPlant, getPlant, deletePlant, searchPlant } from '@/api/plant'
 import { searchMaterial } from '@/api/material'
 export default {
+  name: 'Plant',
   components: { Pagination },
   data() {
     return {

@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -79,14 +76,7 @@
       </el-table-column>
       <el-table-column label="获取途径" align="center" column-key="channels" :filters="channelList">
         <template slot-scope="scope">
-          <span v-if="scope.row.activity">{{ scope.row.activity }}/</span>
-          <span v-if="scope.row.season">{{ scope.row.season }}</span>
-          <!-- <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
-            index === scope.row.season.length - 1 ? item : item + '/'
-          }}</span> -->
-          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
-            index === scope.row.channels.length - 1 ? item : item + '/'
-          }}</span>
+          {{ scope.row.activity ? scope.row.activity + '/' + scope.row.channels.join('/') : scope.row.channels.join('/') }}
         </template>
       </el-table-column>
       <el-table-column label="颜色" align="center" prop="color" column-key="color" :filters="colorList">
@@ -97,13 +87,12 @@
       </el-table-column>
       <el-table-column label="风格" align="center" prop="style" sortable="custom" column-key="style" :filters="styleList">
         <template slot-scope="scope">
-          <!-- {{ scope.row.style }} -->
-          <span v-for="(item, index) in scope.row.style" :key="'color' + index">{{ index === scope.row.style.length - 1 ? item : item + '、' }}</span>
+          {{ scope.row.style.join() }}
         </template>
       </el-table-column>
       <el-table-column label="主题" align="center" prop="theme" column-key="theme" :filters="themeList">
         <template slot-scope="scope">
-          <span v-for="(item, index) in scope.row.theme" :key="'color' + index">{{ index === scope.row.theme.length - 1 ? item : item + '、' }}</span>
+          {{ scope.row.theme.join() }}
         </template>
       </el-table-column>
       <el-table-column label="售卖时间" align="center" prop="saleTime" sortable="custom" column-key="saleTime" :filters="seasonList">
@@ -189,7 +178,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isSale">
+          <el-col v-show="isSale" :span="8">
             <el-form-item label="售卖时间" prop="saleTime">
               <el-select v-model="newClothing.saleTime" placeholder="请选择售卖时间">
                 <el-option v-for="item in seasonList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
@@ -216,8 +205,8 @@
                 :on-remove="handleRemove"
                 :on-success="handleSuccess"
               >
-                <el-button size="small" type="success" v-if="newClothing.photoSrc[0]">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
+                <el-button v-if="newClothing.photoSrc[0]" size="small" type="success">已上传，可点击修改</el-button>
+                <el-button v-else size="small" type="primary"><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
               </el-upload>
             </el-form-item>
           </el-col>
@@ -240,10 +229,11 @@
 <script>
 import { mapState } from 'vuex'
 import Pagination from '@/components/Pagination'
-import { getClothingList, addClothing, getClothing, deleteClothing, searchClothing } from '@/api/clothing'
+import { getClothingList, addClothing, getClothing, deleteClothing } from '@/api/clothing'
 import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Clothing',
   components: { Pagination },
   filters: {
     jpnFilter(text) {
@@ -273,15 +263,13 @@ export default {
         jpnName: '',
         price: null,
         type: '',
-        color: [], //颜色
+        color: [], // 颜色
         style: [], // 风格
-        theme: [], //主题
+        theme: [], // 主题
         saleTime: '',
-        orderType: '', //订购类型
-        npc: '',
-        character: '',
-        channels: [], //获取途径
-        channelDetail: '', //获取途径详情
+        orderType: '', // 订购类型
+        channels: [], // 获取途径
+        channelDetail: '', // 获取途径详情
         photoSrc: [],
         activity: ''
       },
@@ -320,7 +308,7 @@ export default {
     //   return isNpc
     // },
     isSale() {
-      let isSaleBl = this.newClothing.orderType === '订购'
+      const isSaleBl = this.newClothing.orderType === '订购'
       return isSaleBl
     }
   },
@@ -365,20 +353,19 @@ export default {
     },
     handleRemove(file) {
       // 移除上传的图片
-      let removePath = file.src
-      //removePath = removePath.replace('/public', '')
+      const removePath = file.src
+      // removePath = removePath.replace('/public', '')
       // 找出pics数组中要移除这项的索引
-      let removeIndex = this.newClothing.photoSrc.findIndex(item => item.src === removePath)
+      const removeIndex = this.newClothing.photoSrc.findIndex(item => item.src === removePath)
       this.newClothing.photoSrc.splice(removeIndex)
     },
     handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let files = res.data
-      let pic = files[0]
+      const files = res.data
+      const pic = files[0]
       let src = pic.path
-      let name = pic.name
+      const name = pic.name
       src = src.replace('/public', '')
-      let newPic = { name: name, src: src }
+      const newPic = { name: name, src: src }
       this.uploadList.push(newPic)
     },
     openAddClothing() {

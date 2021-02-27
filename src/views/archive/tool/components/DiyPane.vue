@@ -66,6 +66,7 @@ import Pagination from '@/components/Pagination'
 import { getDiyTools, addDiyTool, getDiyTool, deleteDiyTool } from '@/api/diyTool'
 
 export default {
+  name: 'DiyPane',
   components: { Pagination },
   filters: {
     statusFilter(status) {

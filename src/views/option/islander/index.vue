@@ -6,17 +6,19 @@
 import OptionIndex from '../components/OptionIndex'
 
 export default {
-  name: 'FishSetting',
+  name: 'IslanderSetting',
   components: { OptionIndex },
   data() {
     return {
       tabOptions: [
-        { label: '鱼出现场所', key: 'fishLocale' },
-        { label: '鱼影大小', key: 'shadow' },
-        { label: '解锁数量要求', key: 'fishUnlock' }
+        { label: '动物种族', key: 'breed' },
+        { label: '岛民性格', key: 'character' },
+        // { label: '性格亚型', key: 'subtype' },
+        { label: '岛民音高', key: 'voice' },
+        { label: '岛民爱好', key: 'hobby' }
       ],
       //tabIndex:0,
-      activeName: 'fishLocale'
+      activeName: 'breed'
     }
   },
   created() {

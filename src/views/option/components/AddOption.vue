@@ -19,6 +19,28 @@
             </el-select>
           </el-form-item>
         </el-col>
+        <el-col :span="8" v-show="isActivity">
+          <el-form-item label="位置" prop="position">
+            <el-select v-model="newOption.position" multiple collapse-tags placeholder="请选择所属半球">
+              <el-option v-for="(item, i) in positionList" :key="item.key + i" :label="item.label" :value="item.key"> </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" v-show="isActivity">
+          <el-form-item label="存在时期" prop="duration">
+            <el-input v-model="newOption.duration" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" v-show="isTopic">
+          <el-form-item label="图标" prop="icon">
+            <el-input v-model="newOption.icon" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" v-show="isTopic">
+          <el-form-item label="颜色" prop="color">
+            <el-input v-model="newOption.color" />
+          </el-form-item>
+        </el-col>
       </el-row>
     </el-form>
     <div slot="footer" class="dialog-footer">
@@ -34,6 +56,7 @@ import { mapState } from 'vuex'
 import { addOption } from '@/api/option'
 
 export default {
+  name: 'OptionAdd',
   props: {
     visible: {
       type: Boolean,
@@ -45,7 +68,11 @@ export default {
         return {
           name: '',
           type: '',
-          orderNum: null
+          orderNum: null,
+          position: '',
+          duration: null,
+          icon: '',
+          color: ''
         }
       }
     },
@@ -58,15 +85,31 @@ export default {
       newOption: {
         name: '',
         type: '',
-        orderNum: null
+        orderNum: null,
+        position: '',
+        duration: null,
+        icon: '',
+        color: ''
       },
       dialogAddVisible: false,
       tabOptions: this.tabList,
+      positionList: [
+        { label: '北半球', key: '北半球' },
+        { label: '南半球', key: '南半球' }
+      ],
       newOptionRules: {
         name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
         type: [{ required: true, message: '请选择类型', trigger: 'change' }],
         orderNum: [{ required: true, message: '请输入序号', trigger: 'blur' }]
       }
+    }
+  },
+  computed: {
+    isActivity() {
+      return this.newOption.type === 'activity'
+    },
+    isTopic() {
+      return this.newOption.type === 'topic'
     }
   },
   watch: {

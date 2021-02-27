@@ -1,7 +1,8 @@
+<!--攻略文章主图上传组件-->
 <template>
   <div class="upload-container">
     <el-upload
-      name="photoSrc"
+      name="avatar"
       :data="dataObj"
       :multiple="false"
       :show-file-list="false"
@@ -50,7 +51,11 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['uploadUrl']),
+    // ...mapGetters(['uploadUrl']),
+    uploadUrl() {
+      const url = process.env.VUE_APP_BASE_API + '/admin/user/upload'
+      return url
+    },
     imageUrl() {
       return this.value ? process.env.VUE_APP_BASE_API + this.value : ''
     }

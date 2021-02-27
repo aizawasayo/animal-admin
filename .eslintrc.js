@@ -10,8 +10,9 @@ module.exports = {
     es6: true
   },
   extends: ['plugin:vue/recommended', '@vue/prettier', 'eslint:recommended', 'plugin:prettier/recommended'],
+  // "eslint:recommended" 启用eslint推荐的规则
   // add your custom rules here
-  //it is base on https://github.com/vuejs/eslint-config-vue
+  // it is base on https://github.com/vuejs/eslint-config-vue
   rules: {
     'vue/max-attributes-per-line': [
       2,

@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -78,9 +75,7 @@
       </el-table-column>
       <el-table-column label="来源" align="center">
         <template slot-scope="scope">
-          <span v-for="(item, index) in scope.row.channel" :key="'channel' + index">{{
-            index === scope.row.channel.length - 1 ? item : item + '/'
-          }}</span>
+          {{ scope.row.channel.join('/') }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
@@ -162,6 +157,7 @@ import { getRecords, addRecord, getRecord, deleteRecord } from '@/api/record'
 import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Record',
   components: { Pagination },
   filters: {
     jpnFilter(text) {
@@ -221,10 +217,6 @@ export default {
     apiUrl() {
       return process.env.VUE_APP_BASE_API
     },
-    // isNpc() {
-    //   let isNpc = this.newRecord.channels.includes('npc赠送')
-    //   return isNpc
-    // },
     isSale() {
       let isSaleBl = this.newRecord.orderType === '订购'
       return isSaleBl

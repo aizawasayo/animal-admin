@@ -142,6 +142,7 @@ import Pagination from '@/components/Pagination'
 import { getFossils, addFossil, getFossil, deleteFossil } from '@/api/fossil'
 
 export default {
+  name: 'Fossil',
   components: { Pagination },
   filters: {
     introFilter(text) {

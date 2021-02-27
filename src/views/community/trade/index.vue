@@ -163,8 +163,10 @@
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 import { getTradeList, addTrade, getTrade, deleteTrade } from '@/api/trade'
+import { timestamp, parseTime, standardTime } from '@/utils'
 
 export default {
+  name: 'Trade',
   components: { Pagination },
   filters: {
     textFilter(text) {
@@ -219,7 +221,7 @@ export default {
       ],
       newTrade: {
         user: '',
-        exchangeType: '我有价', // 交易类型，我有菜/我有价
+        exchangeType: '', // 交易类型，我有菜/我有价
         validTime: null,
         isLineup: true, //是否排队模式
         isPublic: true, //是否公开
@@ -310,6 +312,8 @@ export default {
       this.fetchData('new')
     },
     postTrade() {
+      let timeString = parseTime(this.newTrade.validTime)
+      this.newTrade.validTime = timestamp(timeString)
       this.$refs.newTradeRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         this.newTrade.user = this.$store.getters.userId
@@ -337,6 +341,7 @@ export default {
           this.newTrade = res.data
           let newStr = this.newTrade.exchangeType.split('-')
           this.newTrade.exchangeType = newStr
+          this.newTrade.validTime = standardTime(this.newTrade.validTime)
         })
       })
     },

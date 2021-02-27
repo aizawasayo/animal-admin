@@ -6,17 +6,17 @@
 import OptionIndex from '../components/OptionIndex'
 
 export default {
-  name: 'FishSetting',
+  name: 'HalobiosSetting',
   components: { OptionIndex },
   data() {
     return {
       tabOptions: [
-        { label: '鱼出现场所', key: 'fishLocale' },
-        { label: '鱼影大小', key: 'shadow' },
-        { label: '解锁数量要求', key: 'fishUnlock' }
+        { label: '海洋生物出现场所', key: 'halobiosLocale' },
+        { label: '海洋生物鱼影大小', key: 'halobiosShadow' },
+        { label: '解锁数量要求', key: 'halobiosUnlock' }
       ],
       //tabIndex:0,
-      activeName: 'fishLocale'
+      activeName: 'halobiosLocale'
     }
   },
   created() {

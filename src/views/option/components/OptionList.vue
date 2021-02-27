@@ -23,6 +23,28 @@
           {{ scope.row.name }}
         </template>
       </el-table-column>
+      <el-table-column v-if="isActivity" label="所属半球" align="center" prop="position" sortable="custom">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in scope.row.position" :key="'activityPosition' + index">{{
+            index === scope.row.position.length - 1 ? item : item + '/'
+          }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isActivity" label="所在时期" align="center" prop="duration" sortable="custom">
+        <template slot-scope="scope">
+          {{ scope.row.duration }}
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isTopic" label="图标" align="center" prop="icon">
+        <template slot-scope="scope">
+          {{ scope.row.icon }}
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isTopic" label="颜色" align="center" prop="color">
+        <template slot-scope="scope">
+          {{ scope.row.color }}
+        </template>
+      </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" size="small" @click="$emit('paneEdit', scope.row._id, 'notDIY')"></el-button>
@@ -40,6 +62,7 @@ import Pagination from '@/components/Pagination'
 import { getOptions, deleteOption } from '@/api/option'
 
 export default {
+  name: 'OptionList',
   components: { Pagination },
   props: {
     type: {
@@ -68,18 +91,6 @@ export default {
     }
   },
   watch: {
-    diyKey: {
-      immediate: true,
-      handler(val) {
-        if (val === 'isDIY') {
-          this.toolInfoName = 'toolInfo'
-          this.scopeToolInfo = 'scope.row.toolInfo'
-        } else {
-          this.toolInfoName = ''
-          this.scopeToolInfo = 'scope.row'
-        }
-      }
-    },
     queryKey(newVal) {
       this.queryInfo.query = newVal
     }
@@ -87,6 +98,12 @@ export default {
   computed: {
     apiUrl() {
       return process.env.VUE_APP_BASE_API
+    },
+    isActivity() {
+      return this.type === 'activity'
+    },
+    isTopic() {
+      return this.type === 'topic'
     }
   },
   created() {

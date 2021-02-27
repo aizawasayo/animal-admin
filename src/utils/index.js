@@ -79,6 +79,24 @@ export function formatTime(time, option) {
 }
 
 /**
+ * 把标准时间转换成时间戳
+ * 传入标准时间
+ */
+export function timestamp(date) {
+  var d = new Date(date).getTime();
+  return d / 1000
+}
+
+/**
+ * 时间戳转换成把标准时间
+ * 传入时间戳
+ */
+export function standardTime(timestamp) {
+  let time = timestamp.toString() + '000'
+  return new Date(parseInt(time))
+}
+
+/**
  * @param {string} url
  * @returns {Object}
  */

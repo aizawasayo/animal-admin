@@ -6,7 +6,7 @@
 import OptionIndex from '../components/OptionIndex'
 
 export default {
-  name: '',
+  name: 'DiySetting',
   components: { OptionIndex },
   data() {
     return {

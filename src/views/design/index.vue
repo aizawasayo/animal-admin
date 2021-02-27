@@ -6,7 +6,7 @@
 import DesignIndex from './components/DesignIndex'
 
 export default {
-  name: '',
+  name: 'Design',
   components: { DesignIndex },
   data() {
     return {

@@ -51,6 +51,7 @@ import Pagination from '@/components/Pagination'
 import { getDesignList, deleteDesign } from '@/api/design'
 
 export default {
+  name: 'DesignList',
   components: { Pagination },
   props: {
     type: {

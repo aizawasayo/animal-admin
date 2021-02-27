@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -56,11 +53,6 @@
           {{ scope.row.name }}
         </template>
       </el-table-column>
-      <!-- <el-table-column label="价格" align="center" width="100" column-key="price" >
-        <template slot-scope="scope">
-          {{ scope.row.price }}
-        </template>
-      </el-table-column> -->
       <el-table-column label="英文名" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.engName }}</span>
@@ -73,26 +65,28 @@
       </el-table-column>
       <el-table-column label="种类" align="center" column-key="type" :filters="typeList">
         <template slot-scope="scope">
-          <span v-for="(item, index) in scope.row.type" :key="'type' + index">{{ index === scope.row.type.length - 1 ? item : item + '/' }}</span>
+          {{ scope.row.type.join('/') }}
         </template>
       </el-table-column>
       <el-table-column label="来源" align="center" column-key="channels" :filters="channelList">
         <template slot-scope="scope">
-          <span v-if="scope.row.activity">{{ scope.row.activity }}期间</span>
           <span v-if="scope.row.season">{{ scope.row.season }}</span>
-          <!-- <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
-            index === scope.row.season.length - 1 ? item : item + '/'
-          }}</span> -->
+          <span v-if="scope.row.activity">{{ scope.row.activity }}期间</span>
           <span v-if="scope.row.character">({{ scope.row.character }}性格)</span>
-          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
-            index === scope.row.channels.length - 1 ? item : item + '/'
-          }}</span>
+          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">
+            <span v-if="item === '岛民' || item === 'NPC'">
+              {{ index === scope.row.channels.length - 1 ? item + '赠送' : item + '赠送 /' }}
+            </span>
+            <span v-else>
+              {{ index === scope.row.channels.length - 1 ? item : item + ' /' }}
+            </span>
+          </span>
           <span v-if="scope.row.npc">({{ scope.row.npc }})</span>
         </template>
       </el-table-column>
       <el-table-column label="占地面积" align="center" prop="size" sortable="custom" column-key="size" :filters="sizeList">
         <template slot-scope="scope">
-          {{ scope.row.fsize }}
+          {{ scope.row.size }}
         </template>
       </el-table-column>
       <el-table-column label="合成材料" align="center">
@@ -135,20 +129,20 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="种类" prop="type">
-              <el-select v-model="newRecipe.type" multiple collapse-tags placeholder="请选择种类">
+              <el-select v-model="newRecipe.type" multiple collapse-tags placeholder="请选择种类" clearable>
                 <el-option v-for="item in typeList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="来源(多选)" prop="">
+            <el-form-item label="来源(多选)" prop="channels">
               <el-select v-model="newRecipe.channels" multiple collapse-tags placeholder="请选择获取途径">
                 <el-option v-for="item in channelList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8" v-show="isNpc">
-            <el-form-item label="npc" prop="npc">
+            <el-form-item label="NPC" prop="npc">
               <el-select v-model="newRecipe.npc" placeholder="请选择来源npc">
                 <el-option v-for="item in npcList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
@@ -157,7 +151,7 @@
           <el-col :span="8" v-show="isIslander">
             <el-form-item label="岛民性格" prop="character">
               <el-select v-model="newRecipe.character" placeholder="请选择来源岛民性格">
-                <el-option v-for="item in characterType" :key="item.value" :label="item.text" :value="item.value"> </el-option>
+                <el-option v-for="item in characterList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -168,7 +162,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isActivity">
+          <el-col :span="8">
             <el-form-item label="所属活动" prop="activity">
               <el-select v-model="newRecipe.activity" placeholder="请选择所属活动">
                 <el-option v-for="item in activityList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
@@ -236,6 +230,11 @@
               ><i class="el-icon-plus el-icon--left"></i>增加材料</el-button
             >
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="途径说明" prop="channelDetail">
+              <el-input v-model="newRecipe.channelDetail" type="textarea" placeholder="请输入具体途径说明" />
+            </el-form-item>
+          </el-col>
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -258,6 +257,7 @@ import { searchClothing } from '@/api/clothing'
 import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Recipe',
   components: { Pagination },
   filters: {
     jpnFilter(text) {
@@ -298,39 +298,16 @@ export default {
         ],
         size: '',
         channels: [],
+        channelDetail: '',
         unlockCondition: null,
         photoSrc: ''
       },
       materialList: [],
       sizeList: [],
       typeList: [],
-      activityList: [
-        //活动列表
-        { text: '无', value: '' },
-        { text: '樱花季', value: '樱花季' },
-        { text: '复活节', value: '复活节' },
-        { text: '枫叶季', value: '枫叶季' },
-        { text: '婚礼季', value: '婚礼季' },
-        { text: '蘑菇季', value: '蘑菇季' },
-        { text: '圣诞节', value: '圣诞节' }
-      ],
-      seasonList: [
-        { text: '春季', value: '春季' },
-        { text: '夏季', value: '夏季' },
-        { text: '秋季', value: '秋季' },
-        { text: '冬季', value: '冬季' }
-      ],
-      characterType: [
-        //岛民性格
-        { text: '元气', value: '元气' },
-        { text: '成熟', value: '成熟' },
-        { text: '大姐姐', value: '大姐姐' },
-        { text: '自恋', value: '自恋' },
-        { text: '运动', value: '运动' },
-        { text: '悠闲', value: '悠闲' },
-        { text: '暴躁', value: '暴躁' },
-        { text: '普通', value: '普通' }
-      ],
+      activityList: [],
+      seasonList: [],
+      characterList: [],
       npcList: [
         { text: '狸克', value: '狸克' },
         { text: '西施惠', value: '西施惠' },
@@ -344,19 +321,6 @@ export default {
       ],
       channelList: [
         //获取途径
-        // { text: '漂流瓶', value: '漂流瓶' },
-        // { text: '气球', value: '气球' },
-        // { text: '商店购买', value: '商店购买' },
-        // { text: '狸端机兑换', value: '狸端机兑换' },
-        // { text: '岛民赠送', value: '岛民赠送' },
-        // { text: 'npc赠送', value: 'npc赠送' },
-        // { text: '彩蛋获得时随机顿悟', value: '彩蛋获得时随机顿悟' },
-        // { text: '集齐所有活动DIY手册', value: '集齐所有活动DIY手册' },
-        // { text: '集齐所有活动外装手册', value: '集齐所有活动外装手册' },
-        // { text: '流星雨当晚与傅珂对话', value: '流星雨当晚与傅珂对话' },
-        // { text: '用虾夷扇贝交换随机得到', value: '用虾夷扇贝交换随机得到' },
-        // { text: '堆出完美雪人', value: '堆出完美雪人' },
-        // { text: '灵感', value: '灵感' }
       ],
       unlockConditionList: [
         { text: '无', value: '' },
@@ -382,16 +346,12 @@ export default {
       return process.env.VUE_APP_BASE_API
     },
     isNpc() {
-      let isNpc = this.newRecipe.channels.includes('npc赠送')
+      let isNpc = this.newRecipe.channels.includes('NPC')
       return isNpc
     },
     isIslander() {
-      let isIslander = this.newRecipe.channels.includes('岛民赠送')
+      let isIslander = this.newRecipe.channels.includes('岛民')
       return isIslander
-    },
-    isActivity() {
-      let isActivity = this.newRecipe.type.includes('活动限定')
-      return isActivity
     }
   },
   created() {
@@ -422,6 +382,15 @@ export default {
       })
       getOption('diyUnlock', list => {
         //this.sizeList = list
+      })
+      getOption('season', list => {
+        this.seasonList = list
+      })
+      getOption('character', list => {
+        this.characterList = list
+      })
+      getOption('activity', list => {
+        this.activityList = list
       })
     },
     getMaterialList(query) {

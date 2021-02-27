@@ -106,7 +106,7 @@
           {{ scope.row.shadow }}
         </template>
       </el-table-column>
-      <el-table-column label="解锁条件" align="center" width="50">
+      <el-table-column label="解锁条件" align="center" width="50" prop="unlockCondition" column-key="unlockCondition" :filters="unlockConditionList">
         <template slot-scope="scope">
           {{ scope.row.unlockCondition ? '有' : '无' }}
         </template>
@@ -264,9 +264,11 @@
 <script>
 import { mapState } from 'vuex'
 import Pagination from '@/components/Pagination'
+import getOption from '@/utils/get-option'
 import { getHalobiosList, addHalobios, getHalobios, deleteHalobios } from '@/api/halobios'
 
 export default {
+  name: 'Halobios',
   components: { Pagination },
   filters: {
     introFilter(text) {
@@ -323,22 +325,8 @@ export default {
         { text: '十一月', value: '11月' },
         { text: '十二月', value: '12月' }
       ],
-      shadowList: [
-        { text: '特小', value: '特小' },
-        { text: '小', value: '小' },
-        { text: '稍小', value: '稍小' },
-        { text: '中', value: '中' },
-        { text: '稍大', value: '稍大' },
-        { text: '大', value: '大' },
-        { text: '特大', value: '特大' }
-      ],
-      unlockConditionList: [
-        { text: '无', value: '' },
-        { text: '捞满5个海洋生物', value: '捞满5个海洋生物' },
-        { text: '捞满20个海洋生物', value: '捞满20个海洋生物' },
-        { text: '捞满40个海洋生物', value: '捞满40个海洋生物' },
-        { text: '捞满80个海洋生物', value: '捞满80个海洋生物' }
-      ],
+      shadowList: [],
+      unlockConditionList: [],
       // rarityList: [
       //   { text: '常见🌟', value: '常见🌟' },
       //   { text: '普通🌟🌟', value: '普通🌟🌟' },
@@ -367,6 +355,7 @@ export default {
   },
   created() {
     this.fetchData()
+    this.getOptions()
   },
   methods: {
     fetchData(param) {
@@ -380,9 +369,18 @@ export default {
         this.listLoading = false
       })
     },
+    getOptions() {
+      getOption('halobiosLocale', list => {
+        this.localeList = list
+      })
+      getOption('halobiosShadow', list => {
+        this.shadowList = list
+      })
+      getOption('halobiosUnlock', list => {
+        this.unlockConditionList = list
+      })
+    },
     handleRemove(file) {
-      // 移除上传的图片
-      // 找出pics数组中要移除这项的索引
       this.newHalobios.photoSrc = ''
     },
     handleSuccess(res) {

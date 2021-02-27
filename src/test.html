@@ -12,7 +12,8 @@
   </style>
 </head>
 <body >
-  <div style="width: 100%; height: 100%; background-color: brown;"></div>
+  <div style="width: 100%; height: 50%; background-color: brown;"></div>
+  <div style="width: 100%; height: 50%; background-color: burlywood;"></div>
   <script>
 //  一个参数对应一个表达式 param => expression;
 // 例如 x => x+2;
@@ -32,12 +33,81 @@
  //传入一个表达式，返回一个对象([param]) => ({ key: value });
  //例如  var fuc = (x) => ({key:x})
 
-document.body.addEventListener('click', event=>console.log(this)); // window
+// document.body.addEventListener('click', event=>console.log(this)); // window
 // document.body.addEventListener('click',function(event){console.log(this)});//body 
  // EventObject, BodyElement
+document.querySelector('div').addEventListener('click', function() { console.log(this) })
+// document.querySelector('div').addEventListener('click', () => { console.log(this) })
 
- function fn() {
-    console.log(this.name);
+"use strict"
+
+let obj2 = {
+  jump: function() {
+    console.log('匿名函数赋值给jump',this)
+  },
+  sleep() {
+    console.log('匿名函数赋值给sleep',this)
+  },
+  run: () => {
+    console.log('匿名函数的赋值给run',this)
+  }
+}
+
+let copyJump = obj2.jump
+copyJump()
+obj2.jump()
+obj2.sleep()
+obj2.run()
+
+function Cat(name) {
+  this.name = name || '咪咪'
+  this.meow = function() {
+    console.log('实例方法',this)
+  }
+  jump = function() {
+    console.log('jump',this)
+  }
+  run = () => {
+    console.log('实例方法',this)
+  }
+  console.log(this) // Cat {name: "花花", meow: ƒ} // 构造函数的this指向实例
+}
+Cat.eat = function() {
+  console.log('静态方法',this) 
+}
+Cat.prototype.sleep = function() {
+ console.log('原型方法',this) // 还是看直接调用者，实例调用就指向实例，prototype调用就指向原型
+}
+let littleCat = new Cat('花花')
+// Cat.meow() // 报错，Cat.meow is not a function
+// littleCat.meow() //  实例方法
+
+// Cat.eat()  // 静态方法, this 指向构造函数本身
+// littleCat.eat() // 报错，littleCat.eat is not a function，实例不能访问静态方法
+
+// Cat.sleep() // Cat.sleep is not a function
+Cat.prototype.sleep() // 构造函数原型方法必须用  类名.prototype.方法名 调用 ，否则如上会报错
+// littleCat.sleep() // 原型方法
+
+class Dog{
+  constructor(name) {
+    this.name = name || '旺财'
+    console.log(this) // 指向Dog的实例
+  }
+  jump() {
+    console.log('原型方法',this)
+  }
+  run = () => {
+    console.log('实例方法',this)
+  }
+}
+
+let littleDog = new Dog('狗子')
+// Dog.prototype.jump()
+// littleDog.run() 
+
+function fn() {
+  // console.log(this.name);
 };
 let obj = {
     //name: '行星飞行',
@@ -47,12 +117,7 @@ let obj1 = {
     name: '听风是风',
     o: obj
 };
-obj1.o.func() //行星飞行
-
-
-
-
-
+// obj1.o.func() //行星飞行
 
   </script>
 </body>

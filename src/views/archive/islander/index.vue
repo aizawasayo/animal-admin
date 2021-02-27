@@ -86,7 +86,7 @@
           <svg-icon v-for="n in +scope.row.importance" :key="n" icon-class="star" class="meta-item__icon" />
         </template>
       </el-table-column> -->
-      <el-table-column label="性格" width="100" align="center" prop="character" column-key="character" :filters="characterList" sortable="custom">
+      <el-table-column label="性格" width="80" align="center" prop="character" :filters="characterList">
         <template slot-scope="scope">
           {{ scope.row.character }}
         </template>
@@ -96,14 +96,14 @@
           {{ scope.row.petPhrase }}
         </template>
       </el-table-column>
-      <el-table-column label="座右铭" width="200">
+      <el-table-column label="座右铭" width="160">
         <template slot-scope="scope">
           {{ scope.row.motto }}
         </template>
       </el-table-column>
-      <el-table-column label="目标" align="center">
+      <el-table-column label="amiibo" align="center" column-key="amiibo" sortable="custom">
         <template slot-scope="scope">
-          {{ scope.row.ideal }}
+          {{ scope.row.amiibo }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
@@ -181,6 +181,32 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
+            <el-form-item label="性格亚型" prop="subtype">
+              <el-select v-model="newIslander.subtype" placeholder="请选择性格亚型">
+                <el-option v-for="item in subtypeList" :label="item.text" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="爱好" prop="hobby">
+              <el-select v-model="newIslander.hobby" placeholder="请选择爱好">
+                <el-option v-for="item in hobbyList" :label="item.text" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="音高" prop="voice">
+              <el-select v-model="newIslander.voice" placeholder="请选择音高">
+                <el-option v-for="item in voiceList" :label="item.text" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="amiibo" prop="amiibo">
+              <el-input v-model="newIslander.amiibo" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
             <el-form-item label="口头禅" prop="petPhrase">
               <el-input v-model="newIslander.petPhrase" />
             </el-form-item>
@@ -226,8 +252,10 @@
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 import { getIslanders, addIslander, getIslander, deleteIslander } from '@/api/islander'
+import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Islander',
   components: { Pagination },
   data() {
     const checkMonth = (rule, value, callback) => {
@@ -276,14 +304,23 @@ export default {
         engName: '',
         jpnName: '',
         character: '',
+        subtype: '',
         petPhrase: '',
         motto: '',
         ideal: '',
+        amiibo: null,
+        voice: '',
+        hobby: '',
         photoSrc: ''
       },
       sexList: [
         { text: '♀', value: 0 },
         { text: '♂', value: 1 }
+      ],
+      characterList: [],
+      subtypeList: [
+        { text: 'A型', value: 'A型' },
+        { text: 'B型', value: 'B型' }
       ],
       monthList: [
         { text: '一月', value: '1月' },
@@ -299,53 +336,9 @@ export default {
         { text: '十一月', value: '11月' },
         { text: '十二月', value: '12月' }
       ],
-      characterList: [
-        { text: '元气', value: '元气' },
-        { text: '成熟', value: '成熟' },
-        { text: '大姐姐', value: '大姐姐' },
-        { text: '自恋', value: '自恋' },
-        { text: '运动', value: '运动' },
-        { text: '悠闲', value: '悠闲' },
-        { text: '暴躁', value: '暴躁' },
-        { text: '普通', value: '普通' }
-      ],
-      breedList: [
-        { text: '🐸青蛙', value: '🐸青蛙' },
-        { text: '🐿️松鼠', value: '🐿️松鼠' },
-        { text: '🐹仓鼠', value: '🐹仓鼠' },
-        { text: '🐭老鼠', value: '🐭老鼠' },
-        { text: '🐰兔子', value: '🐰兔子' },
-        { text: '🐙章鱼', value: '🐙章鱼' },
-        { text: '🐷猪', value: '🐷猪' },
-        { text: '🐒猴子', value: '🐒猴子' },
-        { text: '🦍猩猩', value: '🦍猩猩' },
-        { text: '🐨考拉', value: '🐨考拉' },
-        { text: '🐻熊', value: '🐻熊' },
-        { text: '🐼熊猫', value: '🐼熊猫' },
-        { text: '🦁️狮子', value: '🦁️狮子' },
-        { text: '🐯老虎', value: '🐯老虎' },
-        { text: '🐺狼', value: '🐺狼' },
-        { text: '🐱猫', value: '🐱猫' },
-        { text: '🐶狗', value: '🐶狗' },
-        { text: '🐊鳄鱼', value: '🐊鳄鱼' },
-        { text: '🦆鸭子', value: '🦆鸭子' },
-        { text: '🐔鸡', value: '🐔鸡' },
-        { text: '🐦鸟', value: '🐦鸟' },
-        { text: '🦅老鹰', value: '🦅老鹰' },
-        { text: '鸵鸟', value: '鸵鸟' },
-        { text: '🐧企鹅', value: '🐧企鹅' },
-        { text: '🦛河马', value: '🦛河马' },
-        { text: '🦏犀牛', value: '🦏犀牛' },
-        { text: '🐘象', value: '🐘象' },
-        { text: '🦘袋鼠', value: '🦘袋鼠' },
-        { text: '食蚁兽', value: '食蚁兽' },
-        { text: '🦌鹿', value: '🦌鹿' },
-        { text: '🐎马', value: '🐎马' },
-        { text: '🐂牛', value: '🐂牛' },
-        { text: '🐄奶牛', value: '🐄奶牛' },
-        { text: '🐑绵羊', value: '🐑绵羊' },
-        { text: '🐐山羊', value: '🐐山羊' }
-      ],
+      breedList: [],
+      voiceList: [],
+      hobbyList: [],
       newIslanderRules: {
         name: [
           { required: true, message: '请输入岛民名字', trigger: 'blur' },
@@ -361,13 +354,10 @@ export default {
   },
   created() {
     this.fetchData()
+    this.getOptions()
   },
   computed: {
     ...mapGetters(['uploadUrl']),
-    // uploadUrl() {
-    //   const url = process.env.VUE_APP_BASE_API + "/admin/upload
-    //   return ur
-    // },
     apiUrl() {
       return process.env.VUE_APP_BASE_API
     }
@@ -382,6 +372,20 @@ export default {
         this.list = response.data.records
         this.total = response.data.total
         this.listLoading = false
+      })
+    },
+    getOptions() {
+      getOption('breed', list => {
+        this.breedList = list
+      })
+      getOption('character', list => {
+        this.characterList = list
+      })
+      getOption('voice', list => {
+        this.voiceList = list
+      })
+      getOption('hobby', list => {
+        this.hobbyList = list
       })
     },
     changeVal(e) {
@@ -454,7 +458,7 @@ export default {
           this.$message({ message: res.message, type: 'success' })
           this.$refs.upload.clearFiles()
           this.dialogAddVisible = false
-          this.queryInfo.page = 1
+          // this.queryInfo.page = 1
           this.fetchData()
         })
       })

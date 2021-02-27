@@ -6,7 +6,7 @@ const museumRouter = {
   path: '/museum',
   component: Layout,
   redirect: '/museum/fish',
-  name: 'museum',
+  name: 'Museum',
   meta: {
     title: '博物馆图鉴',
     icon: 'museum',
@@ -15,8 +15,8 @@ const museumRouter = {
   children: [
     {
       path: 'fish',
-      component: () => import('@/views/museum/fish/index'),
-      name: 'fish',
+      component: () => import('@/views/museum/fish'),
+      name: 'Fish',
       meta: {
         title: '鱼类',
         icon: 'fish',
@@ -25,8 +25,8 @@ const museumRouter = {
     },
     {
       path: 'insect',
-      component: () => import('@/views/museum/insect/index'),
-      name: 'insect',
+      component: () => import('@/views/museum/insect'),
+      name: 'Insect',
       meta: {
         title: '昆虫',
         icon: 'bug',
@@ -35,8 +35,8 @@ const museumRouter = {
     },
     {
       path: 'fossil',
-      component: () => import('@/views/museum/fossil/index'),
-      name: 'fossil',
+      component: () => import('@/views/museum/fossil'),
+      name: 'Fossil',
       meta: {
         title: '化石',
         icon: 'dragon',
@@ -45,8 +45,8 @@ const museumRouter = {
     },
     {
       path: 'artwork',
-      component: () => import('@/views/museum/artwork/index'),
-      name: 'artwork',
+      component: () => import('@/views/museum/artwork'),
+      name: 'Artwork',
       meta: {
         title: '艺术品',
         icon: 'art',
@@ -55,8 +55,8 @@ const museumRouter = {
     },
     {
       path: 'halobios',
-      component: () => import('@/views/museum/halobios/index'),
-      name: 'halobios',
+      component: () => import('@/views/museum/halobios'),
+      name: 'Halobios',
       meta: {
         title: '海洋生物',
         icon: 'sea',

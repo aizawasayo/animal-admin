@@ -129,11 +129,12 @@ export default {
         // images_upload_url: process.env.VUE_APP_BASE_API + '/admin/upload',
         // images_upload_base_path: process.env.VUE_APP_BASE_API,
         images_upload_handler: function (blobInfo, succFun, failFun) {
+          // toolbar图片上传处理，此处是单文件上传通道，多文件尚未研究
           var xhr, formData
           var file = blobInfo.blob() //转化为易于理解的file对象
           xhr = new XMLHttpRequest()
           xhr.withCredentials = false
-          xhr.open('POST', process.env.VUE_APP_BASE_API + '/admin/upload')
+          xhr.open('POST', process.env.VUE_APP_BASE_API + '/admin/user/upload')
           xhr.onload = function () {
             var json
             if (xhr.status != 200) {
@@ -147,11 +148,12 @@ export default {
             }
             let fileSrc = json.data.path
             fileSrc = fileSrc.replace('/public', '')
-            fileSrc = process.env.VUE_APP_BASE_API + fileSrc
+            fileSrc = process.env.VUE_APP_REAL_API + fileSrc
+            // fileSrc = `http://192.168.31.168:1016${fileSrc}`
             succFun(fileSrc)
           }
           formData = new FormData()
-          formData.append('photoSrc', file, file.name) //此处与源文档不一样
+          formData.append('avatar', file, file.name) //此处与源文档不一样
           xhr.send(formData)
         },
         end_container_on_empty_block: true,
@@ -238,7 +240,7 @@ export default {
     imageSuccessCBK(arr) {
       const _this = this
       arr.forEach(v => {
-        window.tinymce.get(_this.tinymceId).insertContent(`<img class="wscnph" src="${v.url}" >`)
+        window.tinymce.get(_this.tinymceId).insertContent(`<img class="articlePic" src="${v.url}" >`)
       })
     }
   }

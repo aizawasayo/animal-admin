@@ -6,7 +6,7 @@
 import GuideDetail from './components/GuideDetail'
 
 export default {
-  name: 'editGuide',
+  name: 'GuideEdit',
   components: { GuideDetail }
 }
 </script>

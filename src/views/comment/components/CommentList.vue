@@ -18,80 +18,54 @@
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column align="center" label="照片" width="60" prop="photoSrc" sortable="custom">
+      <el-table-column label="评论用户" width="160" align="center">
         <template slot-scope="scope">
-          <img v-if="scope.row.photoSrc" :src="apiUrl + scope.row.photoSrc" width="25" height="25" />
-          <span v-else>未上传</span>
+          {{ scope.row.uid.username }}
         </template>
       </el-table-column>
-      <el-table-column label="名称" align="center" prop="name" sortable="custom">
+      <el-table-column label="评论内容" align="center" prop="content">
         <template slot-scope="scope">
-          {{ scope.row.name }}
+          {{ scope.row.content }}
         </template>
       </el-table-column>
-      <el-table-column label="价格" align="center" prop="price" sortable="custom">
+      <el-table-column label="评论时间" width="200" align="center" prop="created_time">
         <template slot-scope="scope">
-          {{ scope.row.price }}
+          {{ scope.row.created_time | parseTime('{y}-{m}-{d} {h}:{i}') }}
         </template>
       </el-table-column>
-      <el-table-column label="英文名" align="center">
+      <el-table-column label="点赞数" width="100" align="center" prop="like">
         <template slot-scope="scope">
-          {{ scope.row.engName }}
-        </template>
-      </el-table-column>
-      <el-table-column label="日文名" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.jpnName | jpnFilter }}
-        </template>
-      </el-table-column>
-      <el-table-column label="耐久度" width="100" align="center" prop="durability" sortable="custom">
-        <template slot-scope="scope">
-          {{ scope.row.durability }}
-        </template>
-      </el-table-column>
-      <el-table-column label="来源" align="center" prop="channels" sortable="custom">
-        <template slot-scope="scope">
-          {{ scope.row.channels[0] }}
+          {{ scope.row.like }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" size="small" @click="$emit('paneEdit', scope.row._id, 'notDIY')"></el-button>
           <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id)"></el-button>
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="queryInfo.page"
+      :limit.sync="queryInfo.pageSize"
+      :page-sizes="pageSize"
+      @pagination="fetchData"
+    />
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
-import { getTools, addTool, getTool, deleteTool } from '@/api/tool'
+import { getComments, deleteComment } from '@/api/comment'
 
 export default {
-  name: 'ToolPane',
+  name: 'CommentList',
   components: { Pagination },
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'info',
-        deleted: 'danger'
-      }
-      return statusMap[status]
-    },
-    jpnFilter(text) {
-      if (!text) text = ''
-      let jpnText = text.length > 5 ? text.substring(0, 5) + '...' : text
-      return jpnText
-    }
-  },
   props: {
-    diyType: {
-      type: String,
-      default: 'isDIY'
+    type: {
+      type: String
     },
     queryKey: {
       type: String
@@ -101,57 +75,40 @@ export default {
     return {
       list: null,
       listLoading: true,
-      diyKey: this.diyType,
-      toolInfoName: '',
-      scopeToolInfo: 'scope.row.toolInfo',
       queryInfo: {
         query: this.queryKey,
         page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
-        type: this.diyType,
-        sortJson: {},
+        pageSize: 8, // 当前每页显示多少条数据
+        sortJson: { created_time: 1 },
         sort: ''
       },
+      pageSize: [8, 10, 15],
       total: 0,
       emptyText: '没有相关数据',
       multipleSelection: []
     }
   },
-  watch: {
-    diyKey: {
-      immediate: true,
-      handler(val) {
-        if (val === 'isDIY') {
-          this.toolInfoName = 'toolInfo'
-          this.scopeToolInfo = 'scope.row.toolInfo'
-        } else {
-          this.toolInfoName = ''
-          this.scopeToolInfo = 'scope.row'
-        }
-      }
-    },
-    queryKey(newVal) {
-      this.queryInfo.query = newVal
-    }
-  },
   computed: {
+    ...mapGetters(['userId']), // 推荐这种
     apiUrl() {
       return process.env.VUE_APP_BASE_API
+    }
+  },
+  watch: {
+    queryKey(newVal) {
+      this.queryInfo.query = newVal
     }
   },
   created() {
     this.fetchData()
   },
-  // beforeMount(e) { //
-  //   console.log('beforeMount' + this.diyType)
-  // },
   methods: {
     fetchData(param) {
       this.listLoading = true
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getTools(this.queryInfo).then(response => {
+      getComments(this.type, this.queryInfo).then(response => {
         this.list = response.data.records
         this.total = response.data.total || 0
         this.listLoading = false
@@ -171,13 +128,13 @@ export default {
     },
     handleDelete(id) {
       // 删除可批量
-      this.$confirm('此操作将永久删除该工具, 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除该设计, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
         .then(() => {
-          deleteTool(id).then(res => {
+          deleteComment(id, this.type).then(res => {
             this.$message({ type: 'success', message: res.message })
             this.fetchData()
           })

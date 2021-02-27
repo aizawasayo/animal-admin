@@ -99,6 +99,7 @@ import Pagination from '@/components/Pagination'
 import { getGuides, addGuide, getGuide, deleteGuide } from '@/api/guide'
 
 export default {
+  name: 'Guide',
   components: { Pagination },
   filters: {
     statusFilter(status) {

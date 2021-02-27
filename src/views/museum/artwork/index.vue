@@ -183,6 +183,7 @@ import { getArtworkList, addArtwork, getArtwork, deleteArtwork } from '@/api/art
 import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Artwork',
   components: { Pagination },
   filters: {
     jpnFilter(text) {
@@ -217,6 +218,7 @@ export default {
         price: 4980,
         salePrice: 1245,
         size: '',
+        hasFake: null,
         fakeCharacter: '',
         introduction: '',
         photoSrc: []
@@ -239,10 +241,6 @@ export default {
     apiUrl() {
       return process.env.VUE_APP_BASE_API
     },
-    // isNpc() {
-    //   let isNpc = this.newArtwork.channels.includes('npc赠送')
-    //   return isNpc
-    // },
     isSale() {
       let isSaleBl = this.newArtwork.orderType === '订购'
       return isSaleBl
@@ -317,6 +315,7 @@ export default {
       this.$refs.newArtworkRef.validate(valid => {
         this.newArtwork.photoSrc = this.newArtwork.photoSrc.concat(this.uploadList)
         this.uploadList = []
+        this.newArtwork.fakeCharacter ? (this.newArtwork.hasFake = true) : (this.newArtwork.hasFake = false)
         if (!valid) return this.$message.error('请修改有误的表单项')
         addArtwork(this.newArtwork).then(res => {
           this.$message({ message: res.message, type: 'success' })

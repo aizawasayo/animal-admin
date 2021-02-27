@@ -50,7 +50,7 @@ import { mapState } from 'vuex'
 import { getDesign } from '@/api/design'
 
 export default {
-  name: '',
+  name: 'DesignIndex',
   components: { DesignList, AddDesign },
   props: ['tabOptions', 'activeTab'],
   data() {

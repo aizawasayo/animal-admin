@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -294,10 +291,12 @@
 
 <script>
 import { mapState } from 'vuex'
+import getOption from '@/utils/get-option'
 import Pagination from '@/components/Pagination'
 import { getInsects, addInsect, getInsect, deleteInsect } from '@/api/insect'
 
 export default {
+  name: 'Insect',
   components: { Pagination },
   filters: {
     introFilter(text) {
@@ -340,22 +339,7 @@ export default {
         south: []
       },
       periodOptions: { start: '01:00', step: '1:00', end: '24:00' },
-      localeList: [
-        { text: '花', value: '花' },
-        { text: '空中', value: '空中' },
-        { text: '草地', value: '草地' },
-        { text: '树干', value: '树干' },
-        { text: '树桩', value: '树桩' },
-        { text: '岩石', value: '岩石' },
-        { text: '地面', value: '地面' },
-        { text: '地下', value: '地下' },
-        { text: '水边', value: '水边' },
-        { text: '池塘', value: '池塘' },
-        { text: '河流', value: '河流' },
-        { text: '海边', value: '海边' },
-        { text: '雪球周围', value: '雪球周围' },
-        { text: '居民身上', value: '居民身上' }
-      ],
+      localeList: [],
       weatherList: [
         { text: '无限制', value: '' },
         { text: '雨雪天除外', value: '雨雪天除外' }
@@ -375,19 +359,8 @@ export default {
         { text: '十一月', value: '11月' },
         { text: '十二月', value: '12月' }
       ],
-      unlockConditionList: [
-        { text: '无', value: '' },
-        { text: '总捕虫数满20只', value: '总捕虫数满20只' },
-        { text: '总捕虫数满50只', value: '总捕虫数满50只' },
-        { text: '总捕虫数满100只', value: '总捕虫数满100只' }
-      ],
-      rarityList: [
-        { text: '常见🌟', value: '常见🌟' },
-        { text: '普通🌟🌟', value: '普通🌟🌟' },
-        { text: '罕见🌟🌟🌟', value: '罕见🌟🌟🌟' },
-        { text: '稀有🌟🌟🌟🌟', value: '稀有🌟🌟🌟🌟' },
-        { text: '非常稀有🌟🌟🌟🌟🌟', value: '非常稀有🌟🌟🌟🌟🌟' }
-      ],
+      unlockConditionList: [],
+      rarityList: [],
       newInsectRules: {
         name: [
           { required: true, message: '请输入昆虫名称', trigger: 'blur' },
@@ -408,6 +381,7 @@ export default {
   },
   created() {
     this.fetchData()
+    this.getOptions()
   },
   methods: {
     fetchData(param) {
@@ -421,10 +395,18 @@ export default {
         this.listLoading = false
       })
     },
+    getOptions() {
+      getOption('insectLocale', list => {
+        this.localeList = list
+      })
+      getOption('rarity', list => {
+        this.rarityList = list
+      })
+      getOption('insectUnlock', list => {
+        this.unlockConditionList = list
+      })
+    },
     handleRemove(file) {
-      // 移除上传的图片
-      // const removePath = file.response.data.path
-      // 找出pics数组中要移除这项的索引
       this.newInsect.photoSrc = ''
     },
     handleSuccess(res) {

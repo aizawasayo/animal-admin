@@ -176,8 +176,10 @@
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 import { getTurnipList, addTurnip, getTurnip, deleteTurnip } from '@/api/turnip'
+import { timestamp, parseTime, standardTime } from '@/utils'
 
 export default {
+  name: 'Turnip',
   components: { Pagination },
   filters: {
     textFilter(text) {
@@ -311,6 +313,8 @@ export default {
       this.fetchData('new')
     },
     postTurnip() {
+      let timeString = parseTime(this.newTurnip.validTime)
+      this.newTurnip.validTime = timestamp(timeString)
       this.$refs.newTurnipRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         this.newTurnip.user = this.$store.getters.userId
@@ -336,6 +340,7 @@ export default {
         // 回显数据
         this.$nextTick(function () {
           this.newTurnip = res.data
+          this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
         })
       })
     },

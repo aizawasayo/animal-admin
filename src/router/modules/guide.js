@@ -8,8 +8,8 @@ const guideRouter = {
   redirect: '/guide/index',
   children: [{
       path: 'index',
-      name: 'guide',
-      component: () => import('@/views/guide/index'),
+      component: () => import('@/views/guide'),
+      name: 'Guide',
       meta: {
         title: '攻略管理',
         icon: 'guide',
@@ -19,7 +19,7 @@ const guideRouter = {
     {
       path: 'add',
       component: () => import('@/views/guide/add'),
-      name: 'addGuide',
+      name: 'GuideAdd',
       meta: {
         title: '新增攻略',
         icon: 'create',
@@ -32,7 +32,7 @@ const guideRouter = {
     {
       path: 'edit/:id',
       component: () => import('@/views/guide/edit'),
-      name: 'editGuide',
+      name: 'GuideEdit',
       meta: {
         title: '编辑攻略',
         noCache: true,

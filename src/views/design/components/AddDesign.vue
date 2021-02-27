@@ -52,6 +52,7 @@ import { mapState, mapGetters } from 'vuex'
 import { addDesign } from '@/api/design'
 
 export default {
+  name: 'DesignAdd',
   props: {
     visible: {
       type: Boolean,
@@ -91,7 +92,7 @@ export default {
   },
   computed: {
     ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    ...mapGetters(['userId', 'roles']) //推荐这种
+    ...mapGetters(['userId']) //推荐这种
   },
   watch: {
     design: {

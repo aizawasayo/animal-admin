@@ -268,10 +268,12 @@
 
 <script>
 import { mapState } from 'vuex'
+import getOption from '@/utils/get-option'
 import Pagination from '@/components/Pagination'
 import { getFishes, addFish, getFish, deleteFish } from '@/api/fish'
 
 export default {
+  name: 'Fish',
   components: { Pagination },
   filters: {
     introFilter(text) {
@@ -313,15 +315,7 @@ export default {
         south: []
       },
       periodOptions: { start: '01:00', step: '1:00', end: '24:00' },
-      localeList: [
-        { text: '河流', value: '河流' },
-        { text: '池塘', value: '池塘' },
-        { text: '悬崖上', value: '悬崖上' },
-        { text: '出海口', value: '出海口' },
-        { text: '大海', value: '大海' },
-        { text: '码头', value: '码头' },
-        { text: '雨雪天', value: '雨雪天' }
-      ],
+      localeList: [],
       monthList: [
         { text: '全选', value: '全年' },
         { text: '一月', value: '1月' },
@@ -337,29 +331,9 @@ export default {
         { text: '十一月', value: '11月' },
         { text: '十二月', value: '12月' }
       ],
-      shadowList: [
-        { text: '小', value: '小' },
-        { text: '稍小', value: '稍小' },
-        { text: '中', value: '中' },
-        { text: '稍大', value: '稍大' },
-        { text: '大', value: '大' },
-        { text: '特大', value: '特大' },
-        { text: '背鳍', value: '背鳍' },
-        { text: '细长', value: '细长' }
-      ],
-      unlockConditionList: [
-        { text: '无', value: '' },
-        { text: '总钓鱼数满20条', value: '总钓鱼数满20条' },
-        { text: '总钓鱼数满50条', value: '总钓鱼数满50条' },
-        { text: '总钓鱼数满100条', value: '总钓鱼数满100条' }
-      ],
-      rarityList: [
-        { text: '常见🌟', value: '常见🌟' },
-        { text: '普通🌟🌟', value: '普通🌟🌟' },
-        { text: '罕见🌟🌟🌟', value: '罕见🌟🌟🌟' },
-        { text: '稀有🌟🌟🌟🌟', value: '稀有🌟🌟🌟🌟' },
-        { text: '非常稀有🌟🌟🌟🌟🌟', value: '非常稀有🌟🌟🌟🌟🌟' }
-      ],
+      shadowList: [],
+      unlockConditionList: [],
+      rarityList: [],
       newFishRules: {
         name: [
           { required: true, message: '请输入鱼类名称', trigger: 'blur' },
@@ -381,6 +355,7 @@ export default {
   },
   created() {
     this.fetchData()
+    this.getOptions()
   },
   methods: {
     fetchData(param) {
@@ -392,6 +367,20 @@ export default {
         this.list = response.data.records
         this.total = response.data.total
         this.listLoading = false
+      })
+    },
+    getOptions() {
+      getOption('fishLocale', list => {
+        this.localeList = list
+      })
+      getOption('shadow', list => {
+        this.shadowList = list
+      })
+      getOption('rarity', list => {
+        this.rarityList = list
+      })
+      getOption('fishUnlock', list => {
+        this.unlockConditionList = list
       })
     },
     handleRemove(file) {

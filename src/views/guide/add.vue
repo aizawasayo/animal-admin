@@ -6,7 +6,7 @@
 import GuideDetail from './components/GuideDetail'
 
 export default {
-  name: 'addGuide',
+  name: 'GuideAdd',
   components: { GuideDetail }
 }
 </script>

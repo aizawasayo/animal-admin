@@ -6,7 +6,7 @@
 import OptionIndex from '../components/OptionIndex'
 
 export default {
-  name: '',
+  name: 'ClothingSetting',
   components: { OptionIndex },
   data() {
     return {

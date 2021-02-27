@@ -21,9 +21,6 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
-          <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-        </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
@@ -78,13 +75,9 @@
       </el-table-column>
       <el-table-column label="来源" align="center" prop="channels" sortable="custom">
         <template slot-scope="scope">
+          <span v-if="scope.row.season && scope.row.season.length !== 0">{{ scope.row.season.join('/') }}</span>
           <span v-if="scope.row.activity">{{ scope.row.activity }}期间</span>
-          <span v-if="scope.row.season && scope.row.season.length !== 0" v-for="(item, index) in scope.row.season" :key="'season' + index">{{
-            index === scope.row.season.length - 1 ? item : item + '/'
-          }}</span>
-          <span v-for="(item, index) in scope.row.channels" :key="'channels' + index">{{
-            index === scope.row.channels.length - 1 ? item : item + '/'
-          }}</span>
+          <span>{{ scope.row.channels.join('/') }}</span>
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
@@ -175,8 +168,10 @@
 import { mapState } from 'vuex'
 import Pagination from '@/components/Pagination'
 import { getMaterials, addMaterial, getMaterial, deleteMaterial } from '@/api/material'
+import getOption from '@/utils/get-option'
 
 export default {
+  name: 'Material',
   components: { Pagination },
   filters: {
     introFilter(text) {
@@ -208,22 +203,8 @@ export default {
         channels: [],
         photoSrc: ''
       },
-      activityList: [
-        //活动列表
-        { text: '无', value: '' },
-        { text: '樱花季', value: '樱花季' },
-        { text: '复活节', value: '复活节' },
-        { text: '枫叶季', value: '枫叶季' },
-        { text: '婚礼季', value: '婚礼季' },
-        { text: '蘑菇季', value: '蘑菇季' },
-        { text: '圣诞节', value: '圣诞节' }
-      ],
-      seasonList: [
-        { text: '春季', value: '春季' },
-        { text: '夏季', value: '夏季' },
-        { text: '秋季', value: '秋季' },
-        { text: '冬季', value: '冬季' }
-      ],
+      activityList: [],
+      seasonList: [],
       channelList: [
         { text: '商店购买', value: '商店购买' },
         { text: '狸端机订购', value: '狸端机订购' },
@@ -272,6 +253,7 @@ export default {
   },
   created() {
     this.fetchData()
+    this.getOptions()
   },
   methods: {
     fetchData(param) {
@@ -283,6 +265,14 @@ export default {
         this.list = response.data.records
         this.total = response.data.total || 0
         this.listLoading = false
+      })
+    },
+    getOptions() {
+      getOption('activity', list => {
+        this.activityList = list
+      })
+      getOption('season', list => {
+        this.seasonList = list
       })
     },
     handleRemove(file) {
@@ -330,7 +320,7 @@ export default {
           this.$message({ message: res.message, type: 'success' })
           this.$refs.upload.clearFiles()
           this.dialogAddVisible = false
-          this.queryInfo.page = 1
+          //this.queryInfo.page = 1
           this.fetchData()
         })
       })

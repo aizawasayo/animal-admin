@@ -49,6 +49,11 @@
           {{ scope.row.username }}
         </template>
       </el-table-column>
+      <el-table-column label="邮箱" align="center" prop="email" sortable="custom" width="200">
+        <template slot-scope="scope">
+          {{ scope.row.email }}
+        </template>
+      </el-table-column>
       <el-table-column label="昵称" align="center" width="90">
         <template slot-scope="scope">
           {{ scope.row.nickname }}
@@ -56,10 +61,10 @@
       </el-table-column>
       <el-table-column label="登岛日期" align="center" width="110" sortable="custom" prop="startDate">
         <template slot-scope="scope">
-          {{ scope.row.startDate | dateFilter }}
+          {{ scope.row.startDate | parseTime('{y}-{m}-{d}') }}
         </template>
       </el-table-column>
-      <el-table-column label="动森ID" align="center" prop="gameId">
+      <el-table-column label="动森ID" align="center" prop="gameId" width="180">
         <template slot-scope="scope">
           {{ scope.row.gameId }}
         </template>
@@ -131,7 +136,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="登岛日期" prop="startDate">
-              <el-date-picker v-model="newUser.startDate" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
+              <el-date-picker v-model="newUser.islandDate" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -188,14 +193,11 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { getUsers, addUser, getUser, editUser, deleteUser } from '@/api/user'
+import { timestamp, standardTime } from '@/utils'
 
 export default {
+  name: 'User',
   components: { Pagination },
-  filters: {
-    dateFilter(date) {
-      return date.substring(0, 10)
-    }
-  },
   data() {
     const checkPass = (rule, value, callback) => {
       // 至少8个字符，至少1个大写字母，1个小写字母和1个数字,不能包含特殊字符（非数字字母）：
@@ -229,7 +231,8 @@ export default {
         gameId: '',
         islandName: '',
         position: '',
-        startDate: new Date(),
+        islandDate: null,
+        startDate: '',
         password: '',
         avatar: '',
         roles: [],
@@ -325,6 +328,7 @@ export default {
       // 新增用户
       this.$refs.newUserRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
+        this.newUser.startDate = timestamp(this.newUser.islandDate)
         if (this.newUser._id) {
           editUser(this.newUser._id, this.newUser).then(res => {
             this.$message({ message: res.message, type: 'success' })
@@ -354,6 +358,9 @@ export default {
         // 回显数据
         this.$nextTick(function () {
           this.newUser = res.data
+          if (this.newUser.startDate) {
+            this.newUser.islandDate = standardTime(this.newUser.startDate)
+          }
         })
       })
     },

@@ -6,7 +6,7 @@ const optionRouter = {
   path: '/option',
   component: Layout,
   redirect: '/option/general',
-  name: 'option',
+  name: 'Option',
   meta: {
     title: '选项配置',
     icon: 'setting',
@@ -14,8 +14,8 @@ const optionRouter = {
   },
   children: [{
       path: 'general',
-      component: () => import('@/views/option/general/index'),
-      name: 'general',
+      component: () => import('@/views/option/general'),
+      name: 'GeneralSetting',
       meta: {
         title: '通用配置',
         icon: 'table',
@@ -23,9 +23,19 @@ const optionRouter = {
       },
     },
     {
+      path: 'islander',
+      component: () => import('@/views/option/islander'),
+      name: 'IslanderSetting',
+      meta: {
+        title: '岛民配置',
+        icon: 'people',
+        roles: ['admin']
+      },
+    },
+    {
       path: 'furniture',
-      component: () => import('@/views/option/furniture/index'),
-      name: 'furnitureSetting',
+      component: () => import('@/views/option/furniture'),
+      name: 'FurnitureSetting',
       meta: {
         title: '家具配置',
         icon: 'furniture',
@@ -34,8 +44,8 @@ const optionRouter = {
     },
     {
       path: 'clothing',
-      component: () => import('@/views/option/clothing/index'),
-      name: 'clothingSetting',
+      component: () => import('@/views/option/clothing'),
+      name: 'ClothingSetting',
       meta: {
         title: '服饰配置',
         icon: 'theme',
@@ -44,8 +54,8 @@ const optionRouter = {
     },
     {
       path: 'fish',
-      component: () => import('@/views/option/fish/index'),
-      name: 'fishSetting',
+      component: () => import('@/views/option/fish'),
+      name: 'FishSetting',
       meta: {
         title: '鱼类配置',
         icon: 'fish',
@@ -54,8 +64,8 @@ const optionRouter = {
     },
     {
       path: 'insect',
-      component: () => import('@/views/option/insect/index'),
-      name: 'insectSetting',
+      component: () => import('@/views/option/insect'),
+      name: 'InsectSetting',
       meta: {
         title: '昆虫配置',
         icon: 'bug',
@@ -63,9 +73,19 @@ const optionRouter = {
       }
     },
     {
+      path: 'halobios',
+      component: () => import('@/views/option/halobios'),
+      name: 'HalobiosSetting',
+      meta: {
+        title: '海洋生物配置',
+        icon: 'sea',
+        roles: ['admin']
+      }
+    },
+    {
       path: 'tool',
-      component: () => import('@/views/option/tool/index'),
-      name: 'toolSetting',
+      component: () => import('@/views/option/tool'),
+      name: 'ToolSetting',
       meta: {
         title: '工具配置',
         icon: 'tool',
@@ -74,8 +94,8 @@ const optionRouter = {
     },
     {
       path: 'diy',
-      component: () => import('@/views/option/diyOption/index'),
-      name: 'diySetting',
+      component: () => import('@/views/option/diyOption'),
+      name: 'DiySetting',
       meta: {
         title: 'DIY配置',
         icon: 'book',
