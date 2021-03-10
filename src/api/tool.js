@@ -29,3 +29,13 @@ export function deleteTool(id) {
     method: 'delete'
   })
 }
+
+export function searchTool(name) {
+  return request({
+    url: 'admin/tool/search',
+    method: 'get',
+    params: {
+      name
+    }
+  })
+}

@@ -36,7 +36,7 @@
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" size="small" @click="$emit('paneEdit', scope.row._id, 'notDIY')"></el-button>
+          <el-button type="primary" icon="el-icon-edit" size="small" @click="$emit('paneEdit', scope.row._id)"></el-button>
           <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id)"></el-button>
         </template>
       </el-table-column>
@@ -95,14 +95,14 @@ export default {
   methods: {
     fetchData(param) {
       this.listLoading = true
-      if (this.roles[0] === 'normal') {
+      if (this.roles.length === 1 && this.roles.includes('normal')) {
         this.queryInfo.user = this.userId
       }
       if (param === 'new') {
         this.queryInfo.page = 1
       }
       getDesignList(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -120,40 +120,14 @@ export default {
       this.fetchData('new')
     },
     handleDelete(id) {
-      // 删除可批量
-      this.$confirm('此操作将永久删除该设计, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteDesign(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteDesign, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteDesign, this.fetchData)
     }
   }
 }

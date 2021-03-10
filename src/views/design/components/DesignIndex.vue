@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddDesign">添加选项</el-button>
+            <el-button type="primary" @click="openAddDesign">添加设计</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -57,6 +57,7 @@ export default {
     return {
       activeName: this.activeTab,
       queryKey: '',
+      addKey: 1,
       dialogAddVisible: false,
       newDesign: {
         name: '',
@@ -82,6 +83,9 @@ export default {
   watch: {
     activeName(val) {
       this.$router.push(`${this.$route.path}?tab=${val}`)
+    },
+    newDesign() {
+      // ++this.addKey
     }
   },
   created() {
@@ -95,17 +99,17 @@ export default {
       this.dialogAddVisible = true
       // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
       // this.$nextTick(function () {
-      let type = this.tabOptions[this.tabIndex].key
+      const type = this.tabOptions[this.tabIndex].key
       this.newDesign = {
         name: '',
         type: type,
-        photoSrc: []
+        photoSrc: [],
+        content: ''
       }
-      //})
+      // })
     },
     handleEdit(arg) {
-      let id = arg[0]
-      let type = arg[1]
+      const id = arg[0]
       getDesign(id).then(res => {
         this.dialogAddVisible = true
         this.newDesign = res.data

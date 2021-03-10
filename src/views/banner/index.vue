@@ -51,7 +51,7 @@
           {{ scope.row.link }}
         </template>
       </el-table-column>
-      <el-table-column label="发布日期" align="center" sortable="custom" prop="created_time">
+      <el-table-column label="发布日期" align="center" prop="created_time" sortable="custom">
         <template slot-scope="scope">
           {{ scope.row.created_time | parseTime('{y}-{m}-{d}') }}
         </template>
@@ -64,7 +64,7 @@
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" size="small" @click="handleEdit(scope.row._id)"></el-button>
-          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id, scope.row.role)"></el-button>
+          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id)"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -74,7 +74,7 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="标题" prop="title">
-              <el-input v-if="newBanner._id" v-model="newBanner.title" disabled="" />
+              <el-input v-if="newBanner._id" v-model="newBanner.title" />
               <el-input v-else v-model="newBanner.title" />
             </el-form-item>
           </el-col>
@@ -144,7 +144,7 @@ export default {
       queryInfo: {
         query: '',
         page: 1, // 当前的页数
-        pageSize: 8, // 当前每页显示多少条数据
+        pageSize: 10, // 当前每页显示多少条数据
         sortJson: {},
         sort: ''
       },
@@ -189,14 +189,12 @@ export default {
         this.queryInfo.page = 1
       }
       getBanners(this.queryInfo).then(res => {
-        this.list = res.data.records
+        this.list = res.data.list
         this.total = res.data.total
         this.loading = false
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
-      // 找出pics数组中要移除这项的索引
       this.newBanner.avatar = ''
     },
     handleSuccess(res) {
@@ -234,13 +232,15 @@ export default {
       // 新增用户
       this.$refs.newBannerRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addBanner(this.newBanner).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addBanner(this.newBanner)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -256,42 +256,15 @@ export default {
         })
       })
     },
-    handleDelete(id, role) {
-      this.$confirm('此操作将永久删除该焦点图, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteBanner(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'error', message: '删除失败' })
-        })
+    handleDelete(id) {
+      this.commonApi.deleteById(id, deleteBanner, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      let role = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-        role += val.role + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id, role)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteBanner, this.fetchData)
     }
   }
 }

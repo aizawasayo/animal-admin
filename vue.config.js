@@ -39,8 +39,9 @@ module.exports = {
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: `http://106.54.168.208:1016`, // 腾讯云服务器
+        // target: `http://106.54.168.208:1016`, // 腾讯云服务器
         // target: `http://192.168.31.168:1016`, // 杭州家本地ip
+        target: 'http://localhost:1016',
         changeOrigin: true,
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''

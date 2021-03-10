@@ -287,7 +287,7 @@ export default {
       queryInfo: {
         query: '',
         page: 1, // 当前的页数
-        pageSize: 8, // 当前每页显示多少条数据
+        pageSize: 10, // 当前每页显示多少条数据
         sortJson: {},
         sort: ''
       },
@@ -364,7 +364,7 @@ export default {
         this.queryInfo.page = 1
       }
       getFishes(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total
         this.listLoading = false
       })
@@ -384,8 +384,6 @@ export default {
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
-      // 找出pics数组中要移除这项的索引
       this.newFish.photoSrc = ''
     },
     handleSuccess(res) {
@@ -445,24 +443,23 @@ export default {
       }
       // 储存当前最后的结果 作为下次的老数据
       this.oldOptions[prop][1] = this.newFish.activeTime[prop]
-      // console.log(this.newFish.activeTime.north)
-      // console.log(this.newFish.activeTime.south)
     },
     postFish() {
-      // 新增岛民
       this.$refs.newFishRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         const startPeriod =
           this.newFish.periodStart.indexOf('0') === 0 ? this.newFish.periodStart.substring(1, 2) : this.newFish.periodStart.substring(0, 2)
         const endPeriod = this.newFish.periodEnd.indexOf('0') === 0 ? this.newFish.periodEnd.substring(1, 2) : this.newFish.periodEnd.substring(0, 2)
         this.newFish.period = startPeriod + '点-' + endPeriod + '点'
-        addFish(this.newFish).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          if (!this.newFish._id) this.queryInfo.page = 1
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          this.fetchData()
-        })
+        addFish(this.newFish)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            if (!this.newFish._id) this.queryInfo.page = 1
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -479,40 +476,14 @@ export default {
       })
     },
     handleDelete(id) {
-      // 删除岛民方法，可批量
-      this.$confirm('此操作将永久删除该岛民, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteFish(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteFish, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteFish, this.fetchData)
     }
   }
 }

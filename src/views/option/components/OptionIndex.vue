@@ -43,10 +43,10 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import OptionList from '../components/OptionList'
 import AddOption from '../components/AddOption'
-import { mapState } from 'vuex'
-import { getOption, deleteOption } from '@/api/option'
+import { getOption } from '@/api/option'
 
 export default {
   name: 'OptionIndex',
@@ -121,7 +121,8 @@ export default {
       this.$refs.optionList[this.tabIndex].handelMultipleDelete()
     },
     fetchOptionData() {
-      this.$refs.optionList[this.tabIndex].fetchData()
+      this.$refs.optionList.forEach(item => item.fetchData())
+      // this.$refs.optionList[this.tabIndex].fetchData()
     },
     hideDialog() {
       this.dialogAddVisible = false

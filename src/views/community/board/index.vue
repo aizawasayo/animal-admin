@@ -119,15 +119,7 @@ import getOption from '@/utils/get-option'
 export default {
   name: 'Board',
   components: { Pagination },
-  filters: {
-    textFilter(text) {
-      let shortText = text
-      if (text && text.length > 30) {
-        shortText = text.substring(0, 30) + '...'
-      }
-      return shortText
-    }
-  },
+  filters: {},
   data() {
     return {
       list: null,
@@ -154,7 +146,8 @@ export default {
         color: ''
       },
       newBoardRules: {
-        topic: [{ required: true, message: '请选择话题', trigger: 'change' }]
+        topic: [{ required: true, message: '请选择话题', trigger: 'change' }],
+        content: [{ required: true, message: '请输入内容', trigger: 'blur' }]
       },
       multipleSelection: []
     }
@@ -173,14 +166,14 @@ export default {
   methods: {
     fetchData(param) {
       this.listLoading = true
-      if (this.roles[0] === 'normal') {
+      if (this.roles.length === 1 && this.roles.includes('normal')) {
         this.queryInfo.user = this.userId
       }
       if (param === 'new') {
         this.queryInfo.page = 1
       }
       getBoardList(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -194,10 +187,7 @@ export default {
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
       let removePath = file.src
-      //removePath = removePath.replace('/public', '')
-      // 找出pics数组中要移除这项的索引
       let removeIndex = this.newBoard.photoSrc.findIndex(item => item.src === removePath)
       this.newBoard.photoSrc.splice(removeIndex)
     },
@@ -243,13 +233,17 @@ export default {
         this.uploadList = []
         if (!valid) return this.$message.error('请修改有误的表单项')
         this.newBoard.user = this.$store.getters.userId
-        addBoard(this.newBoard).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          // if (!this.newBoard._id) this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addBoard(this.newBoard)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            // if (!this.newBoard._id) this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => {
+            this.$message({ message: err.message, type: 'error' })
+          })
       })
     },
     handleEdit(id) {
@@ -264,47 +258,21 @@ export default {
         })
       })
     },
+    addTopicInfo() {
+      let topicName = this.newBoard.topic
+      let topicInfo = this.topicOption.filter(item => item.name === topicName)
+      this.newBoard.icon = topicInfo[0].icon
+      this.newBoard.color = topicInfo[0].color
+    },
     handleDelete(id) {
-      // 删除可批量
-      this.$confirm('此操作将永久删除该工具, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteBoard(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteBoard, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
-    },
-    addTopicInfo() {
-      let topicName = this.newBoard.topic
-      let topicInfo = this.topicOption.filter(item => item.name === topicName)
-      this.newBoard.icon = topicInfo[0].icon
-      this.newBoard.color = topicInfo[0].color
+      this.commonApi.multipleDelete(this.multipleSelection, deleteBoard, this.fetchData)
     }
   }
 }

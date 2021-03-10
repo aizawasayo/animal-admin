@@ -1,14 +1,13 @@
 /**
- * Created by PanJiaChen on 16/11/18.
- */
-
-/**
  * Parse the time to string
  * @param {(Object|string|number)} time
  * @param {string} cFormat
  * @returns {string | null}
  */
 export function parseTime(time, cFormat) {
+  if(!time) {
+    return ''
+  }
   if (arguments.length === 0) {
     return null
   }
@@ -83,8 +82,9 @@ export function formatTime(time, option) {
  * 传入标准时间
  */
 export function timestamp(date) {
-  var d = new Date(date).getTime();
-  return d / 1000
+  let myDate = date ? new Date(date) : new Date()
+  return Date.parse(myDate) / 1000
+  // return Math.round(new Date(date).getTime() / 1000)
 }
 
 /**

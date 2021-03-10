@@ -44,7 +44,7 @@
           <span v-else>未上传</span>
         </template>
       </el-table-column>
-      <el-table-column label="名字" align="center" prop="username" sortable="custom" width="100">
+      <el-table-column label="用户名" align="center" prop="username" sortable="custom" width="100">
         <template slot-scope="scope">
           {{ scope.row.username }}
         </template>
@@ -59,7 +59,7 @@
           {{ scope.row.nickname }}
         </template>
       </el-table-column>
-      <el-table-column label="登岛日期" align="center" width="110" sortable="custom" prop="startDate">
+      <el-table-column label="登岛日期" align="center" width="110" prop="startDate" sortable="custom">
         <template slot-scope="scope">
           {{ scope.row.startDate | parseTime('{y}-{m}-{d}') }}
         </template>
@@ -76,12 +76,12 @@
       </el-table-column>
       <el-table-column label="岛屿位置" width="100" align="center" column-key="position" :filters="positionList">
         <template slot-scope="scope">
-          <span>{{ scope.row.position === 'North' ? '北半球' : '南半球' }}</span>
+          <span>{{ scope.row.position ? (scope.row.position === 'North' ? '北半球' : '南半球') : '' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="角色" width="90" align="center" column-key="roles" :filters="roleList">
         <template slot-scope="scope">
-          {{ scope.row.roles[0] === 'admin' ? '管理员' : '普通用户' }}
+          {{ scope.row.roles.includes('admin') ? '管理员' : '普通用户' }}
         </template>
       </el-table-column>
       <el-table-column label="状态" width="90" align="center" prop="state" column-key="state" :filters="stateList" sortable="custom">
@@ -97,7 +97,7 @@
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
         <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" size="small" @click="handleEdit(scope.row._id)"></el-button>
-          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id, scope.row.role)"></el-button>
+          <el-button type="danger" icon="el-icon-delete" size="small" @click="handleDelete(scope.row._id, scope.row.roles)"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -136,15 +136,21 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="登岛日期" prop="startDate">
-              <el-date-picker v-model="newUser.islandDate" type="date" placeholder="选择日期" style="width: 100%;"></el-date-picker>
+              <el-date-picker
+                v-model="newUser.startDate"
+                type="date"
+                placeholder="选择日期"
+                style="width: 100%;"
+                :picker-options="datesOptions"
+              ></el-date-picker>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="角色" prop="roles">
-              <el-radio-group v-model="newUser.roles[0]">
-                <el-radio label="admin">管理员</el-radio>
-                <el-radio label="normal">普通用户</el-radio>
-              </el-radio-group>
+              <el-checkbox-group v-model="newUser.roles">
+                <el-checkbox label="admin">管理员</el-checkbox>
+                <el-checkbox label="normal">普通用户</el-checkbox>
+              </el-checkbox-group>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -175,8 +181,8 @@
                 :on-remove="handleRemove"
                 :on-success="handleSuccess"
               >
-                <el-button size="small" type="success" v-if="this.newUser.avatar">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
+                <el-button v-if="this.newUser.avatar" size="small" type="success">已上传，可点击修改</el-button>
+                <el-button v-else size="small" type="primary"><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
               </el-upload>
             </el-form-item>
           </el-col>
@@ -193,7 +199,7 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { getUsers, addUser, getUser, editUser, deleteUser } from '@/api/user'
-import { timestamp, standardTime } from '@/utils'
+import { timestamp, parseTime, standardTime } from '@/utils'
 
 export default {
   name: 'User',
@@ -217,7 +223,7 @@ export default {
       queryInfo: {
         query: '',
         page: 1, // 当前的页数
-        pageSize: 8, // 当前每页显示多少条数据
+        pageSize: 10, // 当前每页显示多少条数据
         sortJson: {},
         sort: ''
       },
@@ -225,14 +231,13 @@ export default {
       dialogAddVisible: false,
       emptyText: '没有相关数据',
       newUser: {
-        _id: '',
         username: '',
         nickname: '',
+        email: '',
         gameId: '',
         islandName: '',
         position: '',
-        islandDate: null,
-        startDate: '',
+        startDate: null,
         password: '',
         avatar: '',
         roles: [],
@@ -260,7 +265,12 @@ export default {
         password: [{ validator: checkPass, trigger: 'blur' }],
         roles: [{ required: true, message: '请选择用户角色', trigger: 'change' }]
       },
-      multipleSelection: []
+      multipleSelection: [],
+      datesOptions: {
+        disabledDate(date) {
+          return date.getTime() > Date.now()
+        }
+      }
     }
   },
   computed: {
@@ -282,14 +292,12 @@ export default {
         this.queryInfo.page = 1
       }
       getUsers(this.queryInfo).then(res => {
-        this.userList = res.data.records
+        this.userList = res.data.list
         this.total = res.data.total
         this.listLoading = false
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
-      // 找出pics数组中要移除这项的索引
       this.newUser.avatar = ''
     },
     handleSuccess(res) {
@@ -308,6 +316,7 @@ export default {
     dialogAddClose() {
       this.$refs.newUserRef.resetFields()
       this.$refs.upload.clearFiles()
+      this.newUser.email = ''
       delete this.newUser._id
       delete this.newUser.__v
       delete this.newUser.psw
@@ -328,23 +337,34 @@ export default {
       // 新增用户
       this.$refs.newUserRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        this.newUser.startDate = timestamp(this.newUser.islandDate)
+        const timeString = parseTime(this.newUser.startDate)
+        this.newUser.startDate = timestamp(timeString)
         if (this.newUser._id) {
-          editUser(this.newUser._id, this.newUser).then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            this.queryInfo.page = 1
-            this.fetchData()
-          })
+          editUser(this.newUser._id, this.newUser)
+            .then(res => {
+              this.$message({ message: res.message, type: 'success' })
+              this.$refs.upload.clearFiles()
+              this.dialogAddVisible = false
+              this.queryInfo.page = 1
+              this.fetchData()
+            })
+            .catch(err => {
+              this.newUser.startDate = null
+              this.$message({ message: `修改失败，${err.message}！`, type: 'error' })
+            })
         } else {
-          addUser(this.newUser).then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            this.queryInfo.page = 1
-            this.fetchData()
-          })
+          addUser(this.newUser)
+            .then(res => {
+              this.$message({ message: res.message, type: 'success' })
+              this.$refs.upload.clearFiles()
+              this.dialogAddVisible = false
+              this.queryInfo.page = 1
+              this.fetchData()
+            })
+            .catch(err => {
+              this.newUser.startDate = null
+              this.$message({ message: `添加失败，${err.message}！`, type: 'error' })
+            })
         }
       })
     },
@@ -359,13 +379,13 @@ export default {
         this.$nextTick(function () {
           this.newUser = res.data
           if (this.newUser.startDate) {
-            this.newUser.islandDate = standardTime(this.newUser.startDate)
+            this.newUser.startDate = standardTime(this.newUser.startDate)
           }
         })
       })
     },
-    handleDelete(id, role) {
-      if (role.indexOf('admin') > -1) return this.$message('不能删除管理员！')
+    handleDelete(id, roles) {
+      if (roles && roles.includes('admin')) return this.$message('不能删除管理员！')
       // 删除用户方法，可批量
       this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -394,14 +414,23 @@ export default {
           message: '请先选中至少一条数据！'
         })
       }
-      let id = ''
-      let role = ''
+      let id = '',
+        flag = true
       this.multipleSelection.forEach(val => {
+        if (val.roles.includes('admin')) {
+          flag = false
+        }
         id += val._id + ','
-        role += val.role + ','
       })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id, role)
+      if (flag) {
+        id = id.substring(0, id.length - 1)
+        this.handleDelete(id)
+      } else {
+        this.$message({
+          type: 'warning',
+          message: '没有权限删除管理员！'
+        })
+      }
     }
   }
 }

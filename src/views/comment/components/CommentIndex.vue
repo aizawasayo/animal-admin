@@ -9,10 +9,10 @@
               placeholder="请输入评论关键字"
               class="input-with-select"
               clearable
-              @clear="fetchDesignData"
-              @keyup.enter.native="fetchDesignData"
+              @clear="fetchCommentData"
+              @keyup.enter.native="fetchCommentData"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchDesignData"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchCommentData"></el-button>
             </el-input>
           </el-col>
         </el-row>
@@ -33,9 +33,8 @@
 </template>
 
 <script>
-import CommentList from '../components/CommentList'
 import { mapState } from 'vuex'
-import { getDesign } from '@/api/design'
+import CommentList from '../components/CommentList'
 
 export default {
   name: 'CommentIndex',
@@ -82,8 +81,9 @@ export default {
     handelMultipleDelete() {
       this.$refs.designList[this.tabIndex].handelMultipleDelete()
     },
-    fetchDesignData() {
-      this.$refs.designList[this.tabIndex].fetchData()
+    fetchCommentData() {
+      // this.$refs.designList[this.tabIndex].fetchData()
+      this.$refs.optionList.forEach(item => item.fetchData())
     },
     hideDialog() {
       this.dialogAddVisible = false

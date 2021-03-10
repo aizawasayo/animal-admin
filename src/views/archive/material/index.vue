@@ -262,7 +262,7 @@ export default {
         this.queryInfo.page = 1
       }
       getMaterials(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -276,9 +276,6 @@ export default {
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
-      // const removePath = file.response.data.path
-      // 找出pics数组中要移除这项的索引
       this.newMaterial.photoSrc = ''
     },
     handleSuccess(res) {
@@ -316,13 +313,15 @@ export default {
     postMaterial() {
       this.$refs.newMaterialRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addMaterial(this.newMaterial).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          //this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addMaterial(this.newMaterial)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            //this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -339,40 +338,14 @@ export default {
       })
     },
     handleDelete(id) {
-      // 删除岛民方法，可批量
-      this.$confirm('此操作将永久删除该材料, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteMaterial(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteMaterial, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteMaterial, this.fetchData)
     }
   }
 }

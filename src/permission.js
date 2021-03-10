@@ -35,7 +35,7 @@ router.beforeEach(async (to, from, next) => {
       })
       NProgress.done() // hack: https://github.com/PanJiaChen/vue-element-admin/pull/2939
     } else {
-      // determine whether the user has obtained his permission roles through getInfo
+      // 判断用户是否通过getInfo获得了权限角色
       const hasRoles = store.getters.roles && store.getters.roles.length > 0
       if (hasRoles) {
         next()
@@ -62,6 +62,7 @@ router.beforeEach(async (to, from, next) => {
             replace: true
           })
         } catch (error) {
+          console.warn(error)
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')
           Message.error(error.Message || 'Has Error')

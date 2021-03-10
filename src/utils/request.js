@@ -31,10 +31,6 @@ service.interceptors.request.use(
 
 // response interceptor
 service.interceptors.response.use(
-  /**
-   * If you want to get http information such as headers or status
-   * Please return  response => response
-   */
 
   /**
    * Determine the request status by custom code
@@ -43,10 +39,9 @@ service.interceptors.response.use(
    */
   response => {
     const res = response.data
-    // if the custom code is not 200, it is judged as an error.
-    if (res.code !== 200) {
-      Message({ message: res.message || 'Error', type: 'error', duration: 5 * 1000 })
-
+    // 响应码不是200, 解析返回的错误
+    if (res.code !== 200) { // 服务端自定义错误信息字段为 message
+      // Message({ message: res.message || 'Error', type: 'error', duration: 5 * 1000 })
       // 508: Illegal token; 512: Other clients logged in; 514: Token expired;
       if (res.code === 508 || res.code === 512 || res.code === 514) {
         // to re-login
@@ -60,14 +55,15 @@ service.interceptors.response.use(
           })
         })
       }
+      // console.log('返回错误：' + res.message)
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
       return res
     }
   },
   error => {
-    console.log('err' + error) // for debug
-    Message({ message: error.message, type: 'error', duration: 5 * 1000 })
+    console.log('请求/响应失败：' + error) // for debug
+    Message({ message: error.message, type: 'error', duration: 6 * 1000 })
     return Promise.reject(error)
   }
 )

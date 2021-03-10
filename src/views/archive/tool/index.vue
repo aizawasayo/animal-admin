@@ -65,7 +65,7 @@
       </el-table-column>
       <el-table-column label="日文名" align="center">
         <template slot-scope="scope">
-          {{ scope.row.jpnName | jpnFilter }}
+          {{ scope.row.jpnName | textFilter(5) }}
         </template>
       </el-table-column>
       <el-table-column label="耐久度" align="center" prop="durability" sortable="custom">
@@ -78,7 +78,7 @@
           {{ scope.row.isDIY ? '可DIY制作' : '不可DIY制作' }}
         </template>
       </el-table-column>
-      <el-table-column label="获取途径" align="center" column-key="channel" :filters="channelList">
+      <el-table-column label="获取途径" align="center" column-key="channels" :filters="channelList">
         <template slot-scope="scope">
           <span v-if="scope.row.activity">{{ scope.row.activity }}/</span>
           <span>{{ scope.row.channels.join('/') }}</span>
@@ -188,15 +188,7 @@ import { getTools, addTool, getTool, deleteTool } from '@/api/tool'
 export default {
   name: 'Tool',
   components: { Pagination },
-  filters: {
-    jpnFilter(text) {
-      let jpnText = ''
-      if (text && text.length > 5) {
-        jpnText = text.substring(0, 5) + '...'
-      }
-      return jpnText
-    }
-  },
+  filters: {},
   data() {
     return {
       list: null,
@@ -267,7 +259,7 @@ export default {
         this.queryInfo.page = 1
       }
       getTools(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -318,13 +310,15 @@ export default {
     postTool() {
       this.$refs.newToolRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addTool(this.newTool).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          // if (!this.newTool._id) this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addTool(this.newTool)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            // if (!this.newTool._id) this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -339,48 +333,22 @@ export default {
         })
       })
     },
-    handleDelete(id) {
-      // 删除可批量
-      this.$confirm('此操作将永久删除该工具, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteTool(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
-    },
-    handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
-    },
     changeDIY(val) {
       if (val) {
         this.newTool.channels.push('DIY制作')
       } else {
         this.newTool.channels = []
       }
+    },
+    handleDelete(id) {
+      this.commonApi.deleteById(id, deleteTool, this.fetchData)
+    },
+    handleSelectionChange(val) {
+      // 监听多选并给多选数组赋值
+      this.multipleSelection = val
+    },
+    handelMultipleDelete() {
+      this.commonApi.multipleDelete(this.multipleSelection, deleteTool, this.fetchData)
     }
   }
 }

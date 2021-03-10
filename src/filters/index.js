@@ -2,7 +2,7 @@
 export { parseTime, formatTime } from '@/utils'
 
 /**
- * Show plural label if time is plural number
+ * 当时间不是 单数 1，则显示 复数 后缀
  * @param {number} time
  * @param {string} label
  * @return {string}
@@ -15,14 +15,15 @@ function pluralize(time, label) {
 }
 
 /**
+ * 距离现在过去了多少时间，英文后缀
  * @param {number} time
  */
 export function timeAgo(time) {
   const between = Date.now() / 1000 - Number(time)
   if (between < 3600) {
-    return pluralize(~~(between / 60), ' minute')
+    return pluralize(~~(between / 60), ' mintue')
   } else if (between < 86400) {
-    return pluralize(~~(between / 3600), ' hour')
+    return pluralize(~~(between / 3600), ' hours')
   } else {
     return pluralize(~~(between / 86400), ' day')
   }
@@ -65,4 +66,18 @@ export function toThousandFilter(num) {
  */
 export function uppercaseFirst(string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
+}
+
+
+/** 截取字数长度, 常用
+  * @param {string} text
+  * @param {number} length
+*/
+export function textFilter(text, length){
+  let shortText = text
+  const len = length ? length : 20
+  if (text && text.length > len) {
+    shortText = text.substring(0, len) + '...'
+  }
+  return shortText
 }

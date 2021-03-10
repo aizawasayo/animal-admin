@@ -54,7 +54,7 @@
       </el-table-column>
       <el-table-column label="详情" align="center">
         <template slot-scope="scope">
-          {{ scope.row.detail | textFilter }}
+          {{ scope.row.detail | textFilter(10) }}
         </template>
       </el-table-column>
       <el-table-column label="联系方式" align="center">
@@ -75,6 +75,13 @@
       <el-table-column label="登岛时间限制" align="center" prop="maxTime">
         <template slot-scope="scope">
           {{ scope.row.isLineup ? scope.row.maxTime : '' }}
+        </template>
+      </el-table-column>
+      <el-table-column align="center" label="发布状态" width="110">
+        <template slot-scope="{ row }">
+          <el-tag :type="row.validTime | statusFilter">
+            {{ row.validTime > nowTime ? '有效' : '失效' }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="操作" width="150" align="center">
@@ -182,12 +189,9 @@ export default {
   name: 'Turnip',
   components: { Pagination },
   filters: {
-    textFilter(text) {
-      let shortText = text
-      if (text && text.length > 30) {
-        shortText = text.substring(0, 30) + '...'
-      }
-      return shortText
+    statusFilter(time) {
+      let status = time > timestamp() ? 'success' : 'info'
+      return status
     }
   },
   data() {
@@ -256,6 +260,9 @@ export default {
       let bl = true
       this.newTurnip.exchangeType === '我有价' && this.newTurnip.isLineup === true ? (bl = true) : (bl = false)
       return bl
+    },
+    nowTime() {
+      return timestamp()
     }
   },
   created() {
@@ -264,14 +271,14 @@ export default {
   methods: {
     fetchData(param) {
       this.listLoading = true
-      if (this.roles[0] === 'normal') {
+      if (this.roles.length === 1 && this.roles.includes('normal')) {
         this.queryInfo.user = this.userId
       }
       if (param === 'new') {
         this.queryInfo.page = 1
       }
       getTurnipList(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -282,15 +289,9 @@ export default {
       this.$nextTick(function () {
         // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
         this.$refs['newTurnipRef'].resetFields()
+
         if (!this.newTurnip._id) {
-          let time = new Date()
-          let yy = time.getFullYear()
-          let month = time.getMonth() // 月份
-          let dd = time.getDate() // 日
-          let hh = time.getHours() + 2
-          let mm = time.getMinutes()
-          let val = new Date(yy, month, dd, hh, mm)
-          this.newTurnip.validTime = val
+          this.newTurnip.validTime = this.nowVaildTime()
           this.$forceUpdate()
         }
       })
@@ -299,6 +300,16 @@ export default {
       this.$refs.newTurnipRef.resetFields()
       delete this.newTurnip._id
       delete this.newTurnip.__v
+    },
+    nowVaildTime() {
+      const time = new Date()
+      const yy = time.getFullYear()
+      const month = time.getMonth() // 月份
+      const dd = time.getDate() // 日
+      const hh = time.getHours() + 2
+      const mm = time.getMinutes()
+      const val = new Date(yy, month, dd, hh, mm)
+      return val
     },
     filterChange(filter) {
       Object.assign(this.queryInfo, filter)
@@ -313,7 +324,7 @@ export default {
       this.fetchData('new')
     },
     postTurnip() {
-      let timeString = parseTime(this.newTurnip.validTime)
+      const timeString = parseTime(this.newTurnip.validTime)
       this.newTurnip.validTime = timestamp(timeString)
       this.$refs.newTurnipRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
@@ -323,12 +334,14 @@ export default {
           this.isPublic = false
           this.isAuto = false
         }
-        addTurnip(this.newTurnip).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.dialogAddVisible = false
-          // if (!this.newTurnip._id) this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addTurnip(this.newTurnip)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.dialogAddVisible = false
+            // if (!this.newTurnip._id) this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -340,45 +353,20 @@ export default {
         // 回显数据
         this.$nextTick(function () {
           this.newTurnip = res.data
-          this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
+          //this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
+          this.newTurnip.validTime = this.nowVaildTime()
         })
       })
     },
     handleDelete(id) {
-      // 删除可批量
-      this.$confirm('此操作将永久删除该工具, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteTurnip(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteTurnip, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteTurnip, this.fetchData)
     }
   }
 }

@@ -68,7 +68,7 @@
       </el-table-column>
       <el-table-column label="日文名" align="center">
         <template slot-scope="scope">
-          {{ scope.row.jpnName | jpnFilter }}
+          {{ scope.row.jpnName | textFilter(5) }}
         </template>
       </el-table-column>
       <el-table-column label="真名" align="center">
@@ -186,11 +186,6 @@ export default {
   name: 'Artwork',
   components: { Pagination },
   filters: {
-    jpnFilter(text) {
-      let jpnText = ''
-      text && text.length > 5 ? (jpnText = text.substring(0, 5) + '...') : (jpnText = text)
-      return jpnText
-    },
     introFilter(text) {
       return text ? text.substring(0, 10) + '...' : '无赝品'
     }
@@ -257,7 +252,7 @@ export default {
         this.queryInfo.page = 1
       }
       getArtworkList(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -270,7 +265,6 @@ export default {
     handleRemove(file) {
       // 移除上传的图片
       let removePath = file.src
-      //removePath = removePath.replace('/public', '')
       // 找出pics数组中要移除这项的索引
       let removeIndex = this.newArtwork.photoSrc.findIndex(item => item.src === removePath)
       this.newArtwork.photoSrc.splice(removeIndex)
@@ -317,13 +311,15 @@ export default {
         this.uploadList = []
         this.newArtwork.fakeCharacter ? (this.newArtwork.hasFake = true) : (this.newArtwork.hasFake = false)
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addArtwork(this.newArtwork).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          // if (!this.newArtwork._id) this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addArtwork(this.newArtwork)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            // if (!this.newArtwork._id) this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -339,40 +335,14 @@ export default {
       })
     },
     handleDelete(id) {
-      // 删除岛民方法，可批量
-      this.$confirm('此操作将永久删除该服饰, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteArtwork(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteArtwork, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteArtwork, this.fetchData)
     }
   }
 }

@@ -52,7 +52,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import { addOption } from '@/api/option'
 
 export default {
@@ -156,12 +155,14 @@ export default {
     postOption() {
       this.$refs.newOptionRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addOption(this.newOption).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.resetForm()
-          this.$emit('closeDialog')
-          this.$emit('freshData')
-        })
+        addOption(this.newOption)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.resetForm()
+            this.$emit('closeDialog')
+            this.$emit('freshData')
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     resetForm() {

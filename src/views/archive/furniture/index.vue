@@ -66,7 +66,7 @@
       </el-table-column>
       <el-table-column label="日文名" align="center">
         <template slot-scope="scope">
-          {{ scope.row.jpnName | jpnFilter }}
+          {{ scope.row.jpnName | textFilter(5) }}
         </template>
       </el-table-column>
       <el-table-column label="类型" align="center" column-key="type" :filters="typeList">
@@ -90,7 +90,7 @@
           {{ scope.row.size }}
         </template>
       </el-table-column>
-      <el-table-column label="改造类型" align="center" prop="remould" column-key="size" :filters="remouldList">
+      <el-table-column label="改造类型" align="center" prop="remould" column-key="remould" :filters="remouldList">
         <template slot-scope="scope">
           {{ scope.row.remould }}
         </template>
@@ -224,15 +224,7 @@ import getOption from '@/utils/get-option'
 export default {
   name: 'Furniture',
   components: { Pagination },
-  filters: {
-    jpnFilter(text) {
-      let jpnText = ''
-      if (text && text.length > 5) {
-        jpnText = text.substring(0, 5) + '...'
-      }
-      return jpnText
-    }
-  },
+  filters: {},
   data() {
     return {
       list: null,
@@ -320,7 +312,7 @@ export default {
         this.queryInfo.page = 1
       }
       getFurnitureList(this.queryInfo).then(response => {
-        this.list = response.data.records
+        this.list = response.data.list
         this.total = response.data.total || 0
         this.listLoading = false
       })
@@ -343,7 +335,6 @@ export default {
       })
     },
     handleRemove(file) {
-      // 移除上传的图片
       let removePath = file.src
       let removeIndex = this.newFurniture.photoSrc.findIndex(item => item.src === removePath)
       this.newFurniture.photoSrc.splice(removeIndex, 1)
@@ -388,13 +379,15 @@ export default {
         this.newFurniture.photoSrc = this.newFurniture.photoSrc.concat(this.uploadList)
         this.uploadList = []
         if (!valid) return this.$message.error('请修改有误的表单项')
-        addFurniture(this.newFurniture).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.$refs.upload.clearFiles()
-          this.dialogAddVisible = false
-          // if (!this.newFurniture._id) this.queryInfo.page = 1
-          this.fetchData()
-        })
+        addFurniture(this.newFurniture)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.$refs.upload.clearFiles()
+            this.dialogAddVisible = false
+            // if (!this.newFurniture._id) this.queryInfo.page = 1
+            this.fetchData()
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     handleEdit(id) {
@@ -410,40 +403,14 @@ export default {
       })
     },
     handleDelete(id) {
-      // 删除岛民方法，可批量
-      this.$confirm('此操作将永久删除该家具, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteFurniture(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
-        })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
+      this.commonApi.deleteById(id, deleteFurniture, this.fetchData)
     },
     handleSelectionChange(val) {
       // 监听多选并给多选数组赋值
       this.multipleSelection = val
     },
     handelMultipleDelete() {
-      // 批量删除岛民
-      if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
-      }
-      let id = ''
-      this.multipleSelection.forEach(val => {
-        id += val._id + ','
-      })
-      id = id.substring(0, id.length - 1)
-      this.handleDelete(id)
+      this.commonApi.multipleDelete(this.multipleSelection, deleteFurniture, this.fetchData)
     }
   }
 }

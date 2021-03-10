@@ -98,6 +98,7 @@ import { getGuide, addGuide } from '@/api/guide'
 import { searchUser } from '@/api/user'
 import Warning from './Warning'
 import { CommentDropdown, PlatformDropdown, SourceUrlDropdown } from './Dropdown'
+import { timestamp, parseTime } from '@/utils'
 
 const defaultForm = {
   status: 'draft',
@@ -224,18 +225,22 @@ export default {
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.postForm.status = state
+          const timeString = parseTime(this.postForm.display_time)
+          this.postForm.display_time = timestamp(timeString)
           this.loading = true
-          addGuide(this.postForm).then(res => {
-            if (res.code === 200) {
-              this.$notify({
-                title: '成功',
-                message: res.message,
-                type: 'success',
-                duration: 2000
-              })
-            }
-            this.loading = false
-          })
+          addGuide(this.postForm)
+            .then(res => {
+              if (res.code === 200) {
+                this.$notify({
+                  title: '成功',
+                  message: res.message,
+                  type: 'success',
+                  duration: 2000
+                })
+              }
+              this.loading = false
+            })
+            .catch(err => this.$message({ message: err.message, type: 'error' }))
         } else {
           this.$message.error('请填写必要的标题和内容')
           return false

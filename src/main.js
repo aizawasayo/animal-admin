@@ -19,6 +19,9 @@ import '@/permission' // permission control
 
 import * as filters from './filters' // global filters
 
+import commonApi from '@/utils/common'
+Vue.prototype.commonApi = commonApi
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

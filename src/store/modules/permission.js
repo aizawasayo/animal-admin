@@ -70,9 +70,9 @@ const actions = {
   }, roles) {
     return new Promise(resolve => {
       let accessedRoutes
-      if (roles.includes('admin')) {
+      if (roles.includes('admin')) { // 如果有管理员权限，直接给予asyncRoutes
         accessedRoutes = asyncRoutes || []
-      } else {
+      } else { // 否则根据用户角色给予过滤后的路由
         accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
       }
       commit('SET_ROUTES', accessedRoutes)

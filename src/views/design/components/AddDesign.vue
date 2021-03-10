@@ -124,10 +124,7 @@ export default {
       this.$emit('closeDialog')
     },
     handleRemove(file) {
-      // 移除上传的图片
       let removePath = file.src
-      //removePath = removePath.replace('/public', '')
-      // 找出pics数组中要移除这项的索引
       let removeIndex = this.newDesign.photoSrc.findIndex(item => item.src === removePath)
       this.newDesign.photoSrc.splice(removeIndex)
     },
@@ -146,13 +143,16 @@ export default {
         this.newDesign.photoSrc = this.newDesign.photoSrc.concat(this.uploadList)
         this.uploadList = []
         if (!valid) return this.$message.error('请修改有误的表单项')
+        if (this.newDesign.photoSrc.length === 0) return this.$message.error('请上传图片！')
         this.newDesign.user = this.userId
-        addDesign(this.newDesign).then(res => {
-          this.$message({ message: res.message, type: 'success' })
-          this.resetForm()
-          this.$emit('closeDialog')
-          this.$emit('freshData')
-        })
+        addDesign(this.newDesign)
+          .then(res => {
+            this.$message({ message: res.message, type: 'success' })
+            this.resetForm()
+            this.$emit('closeDialog')
+            this.$emit('freshData')
+          })
+          .catch(err => this.$message({ message: err.message, type: 'error' }))
       })
     },
     resetForm() {

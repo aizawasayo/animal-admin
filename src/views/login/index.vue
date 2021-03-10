@@ -91,8 +91,14 @@ export default {
           this.loading = true
           this.$store
             .dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/' })
+            .then(res => {
+              if (res.user.roles.includes('admin')) {
+                this.$router.push({ path: this.redirect || '/' })
+              } else {
+                // 普通用户去首页
+                this.$router.push({ path: '/' })
+              }
+
               this.loading = false
             })
             .catch(() => {

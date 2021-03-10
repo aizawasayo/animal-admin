@@ -29,13 +29,3 @@ export function deleteRecord(id) {
     method: 'delete'
   })
 }
-
-export function searchRecord(name) {
-  return request({
-    url: 'admin/record/search',
-    method: 'get',
-    params: {
-      name
-    }
-  })
-}
