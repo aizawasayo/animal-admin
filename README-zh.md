@@ -49,7 +49,7 @@ npm install --registry=https://registry.npm.taobao.org
 npm run dev
 ```
 
-浏览器访问 [http://192.168.31.168:9528](http://192.168.31.168:9528)
+浏览器访问 [http://106.54.168.208:9528](http://106.54.168.208:9528)
 
 ## 发布
 
