@@ -33,7 +33,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import CommentList from '../components/CommentList'
 
 export default {
@@ -55,13 +54,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     tabIndex() {
       return this.tabOptions.findIndex(item => item.key === this.activeName)
     }

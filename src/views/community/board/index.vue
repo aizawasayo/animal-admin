@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddBoard">添加</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('board', this)">添加</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -66,7 +66,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="发布信息" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="发布信息"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('board', this)"
+    >
       <el-form ref="newBoardRef" :inline="false" :model="newBoard" :rules="newBoardRules" label-width="80px">
         <el-row>
           <el-col :span="8">
@@ -76,22 +82,9 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="true"
-                :with-credentials="true"
-                :file-list="newBoard.photoSrc"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="newBoard.photoSrc[0]">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-multi ref="upload" drag :list="newBoard.photoSrc" dialogWidth="50%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -110,15 +103,13 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
-import Pagination from '@/components/Pagination'
+import { mapGetters } from 'vuex'
 import { getBoardList, addBoard, getBoard, deleteBoard } from '@/api/board'
 import { getOptionList } from '@/api/option'
 import getOption from '@/utils/get-option'
 
 export default {
   name: 'Board',
-  components: { Pagination },
   filters: {},
   data() {
     return {
@@ -134,7 +125,6 @@ export default {
       total: 0,
       dialogAddVisible: false,
       emptyText: '没有相关数据',
-      uploadList: [], // 自定义的数组，用于处理fileList，fileList是只读的
       topicList: [],
       topicOption: [],
       newBoard: {
@@ -153,11 +143,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    ...mapGetters(['userId', 'roles']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
+    ...mapGetters(['userId', 'roles']) //推荐这种
   },
   created() {
     this.fetchData()
@@ -172,91 +158,54 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getBoardList(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getBoardList(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('topic', list => {
         this.topicList = list
       })
-      getOptionList({ type: 'topic' }).then(response => {
-        this.topicOption = response.data
-      })
-    },
-    handleRemove(file) {
-      let removePath = file.src
-      let removeIndex = this.newBoard.photoSrc.findIndex(item => item.src === removePath)
-      this.newBoard.photoSrc.splice(removeIndex)
-    },
-    handleSuccess(res) {
-      const files = res.data
-      const pic = files[0]
-      let src = pic.path
-      const name = pic.name
-      src = src.replace('/public', '')
-      const newPic = { name: name, src: src }
-      this.uploadList.push(newPic)
-    },
-    openAddBoard() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newBoardRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newBoardRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newBoard._id
-      delete this.newBoard.__v
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
+      getOptionList({ type: 'topic' })
+        .then(response => {
+          this.topicOption = response.data
+        })
+        .catch(err => this.$message.error(err.message))
     },
     postBoard() {
       this.$refs.newBoardRef.validate(valid => {
-        this.newBoard.photoSrc = this.newBoard.photoSrc.concat(this.uploadList)
         this.addTopicInfo()
-        this.uploadList = []
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        this.newBoard.user = this.$store.getters.userId
-        addBoard(this.newBoard)
-          .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            // if (!this.newBoard._id) this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => {
-            this.$message({ message: err.message, type: 'error' })
-          })
+        this.$refs.upload.getUploadedList().then(uploads => {
+          this.newBoard.photoSrc = uploads.map(obj => ({ ...obj }))
+          if (!valid) return this.$message.error('请修改有误的表单项')
+          this.newBoard.user = this.$store.getters.userId
+          addBoard(this.newBoard)
+            .then(res => {
+              this.$message.success(res.message)
+              this.dialogAddVisible = false
+              // if (!this.newBoard._id) this.queryInfo.page = 1
+              this.fetchData()
+            })
+            .catch(err => this.$message.error(err.message))
+        })
       })
     },
     handleEdit(id) {
       if (this.$refs['newBoardRef']) {
         this.$refs['newBoardRef'].resetFields()
       }
-      getBoard(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newBoard = res.data
+      getBoard(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newBoard = res.data
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     addTopicInfo() {
       let topicName = this.newBoard.topic
@@ -266,10 +215,6 @@ export default {
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteBoard, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteBoard, this.fetchData)

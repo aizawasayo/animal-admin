@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddClothing">添加服饰</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('clothing', this)">添加服饰</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -113,7 +113,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="添加服饰" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="添加服饰"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('clothing', this)"
+    >
       <el-form ref="newClothingRef" :inline="false" :model="newClothing" :rules="newClothingRules" label-width="80px">
         <el-row>
           <el-col :span="8">
@@ -192,22 +198,9 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="true"
-                :with-credentials="true"
-                :file-list="newClothing.photoSrc"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button v-if="newClothing.photoSrc[0]" size="small" type="success">已上传，可点击修改</el-button>
-                <el-button v-else size="small" type="primary"><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-multi ref="upload" drag :list="newClothing.photoSrc" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -227,14 +220,11 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getClothingList, addClothing, getClothing, deleteClothing } from '@/api/clothing'
 import getOption from '@/utils/get-option'
 
 export default {
   name: 'Clothing',
-  components: { Pagination },
   filters: {},
   data() {
     return {
@@ -250,7 +240,6 @@ export default {
       total: 0,
       dialogAddVisible: false,
       emptyText: '没有相关数据',
-      uploadList: [], // 自定义的数组，用于处理fileList，fileList是只读的
       newClothing: {
         name: '',
         engName: '',
@@ -290,13 +279,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     // isNpc() {
     //   let isNpc = this.newClothing.channels.includes('npc赠送')
     //   return isNpc
@@ -316,11 +298,13 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getClothingList(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getClothingList(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('clothingType', list => {
@@ -345,80 +329,40 @@ export default {
         this.seasonList = list
       })
     },
-    handleRemove(file) {
-      const removePath = file.src
-      const removeIndex = this.newClothing.photoSrc.findIndex(item => item.src === removePath)
-      this.newClothing.photoSrc.splice(removeIndex)
-    },
-    handleSuccess(res) {
-      const files = res.data
-      const pic = files[0]
-      let src = pic.path
-      const name = pic.name
-      src = src.replace('/public', '')
-      const newPic = { name: name, src: src }
-      this.uploadList.push(newPic)
-    },
-    openAddClothing() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newClothingRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newClothingRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newClothing._id
-      delete this.newClothing.__v
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     postClothing() {
       this.$refs.newClothingRef.validate(valid => {
-        this.newClothing.photoSrc = this.newClothing.photoSrc.concat(this.uploadList)
-        this.uploadList = []
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addClothing(this.newClothing)
-          .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            // if (!this.newClothing._id) this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+        this.$refs.upload.getUploadedList().then(uploads => {
+          this.newClothing.photoSrc = uploads.map(obj => ({ ...obj }))
+          if (!valid) return this.$message.error('请修改有误的表单项')
+          addClothing(this.newClothing)
+            .then(res => {
+              this.$message.success(res.message)
+              this.dialogAddVisible = false
+              if (!this.newClothing._id) {
+                this.fetchData('new')
+              } else {
+                this.fetchData()
+              }
+            })
+            .catch(err => this.$message.error(err.message))
+        })
       })
     },
     handleEdit(id) {
       if (this.$refs['newClothingRef']) {
         this.$refs['newClothingRef'].resetFields()
       }
-      getClothing(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newClothing = res.data
+      getClothing(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newClothing = res.data
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteClothing, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteClothing, this.fetchData)

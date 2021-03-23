@@ -9,7 +9,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddBanner">添加焦点图</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('banner', this)">添加焦点图</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -25,9 +25,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -69,7 +69,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="添加焦点图" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="添加焦点图"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('banner', this)"
+    >
       <el-form ref="newBannerRef" :inline="false" :model="newBanner" :rules="newBannerRules" label-width="80px">
         <el-row>
           <el-col :span="24">
@@ -91,21 +97,9 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="图片" prop="avatar">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="avatar"
-                :multiple="false"
-                :with-credentials="true"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="this.newBanner.avatar">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-single v-model="newBanner.avatar" dialogWidth="60%" drag />
             </el-form-item>
           </el-col>
         </el-row>
@@ -119,25 +113,11 @@
 </template>
 
 <script>
-import Pagination from '@/components/Pagination'
 import { getBanners, addBanner, getBanner, deleteBanner } from '@/api/banner'
 
 export default {
   name: 'Banner',
-  components: { Pagination },
   data() {
-    const checkPass = (rule, value, callback) => {
-      // 至少8个字符，至少1个大写字母，1个小写字母和1个数字,不能包含特殊字符（非数字字母）：
-      // ^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
-      const reg = new RegExp(/^[a-zA-Z0-9]{8,16}$/)
-      if (!value) {
-        callback(new Error('密码不能为空'))
-      } else if (!reg.test(value)) {
-        callback(new Error('密码不符合规则'))
-      } else {
-        callback()
-      }
-    }
     return {
       list: null,
       loading: true,
@@ -170,15 +150,7 @@ export default {
       multipleSelection: []
     }
   },
-  computed: {
-    uploadUrl() {
-      const url = process.env.VUE_APP_BASE_API + '/admin/user/upload'
-      return url
-    },
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
-  },
+  computed: {},
   created() {
     this.fetchData()
   },
@@ -188,45 +160,13 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getBanners(this.queryInfo).then(res => {
-        this.list = res.data.list
-        this.total = res.data.total
-        this.loading = false
-      })
-    },
-    handleRemove(file) {
-      this.newBanner.avatar = ''
-    },
-    handleSuccess(res) {
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newBanner.avatar = src
-    },
-    openAddBanner() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newBannerRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newBannerRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newBanner._id
-      delete this.newBanner.__v
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
+      getBanners(this.queryInfo)
+        .then(res => {
+          this.list = res.data.list
+          this.total = res.data.total
+          this.loading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     postBanner() {
       // 新增用户
@@ -234,13 +174,12 @@ export default {
         if (!valid) return this.$message.error('请修改有误的表单项')
         addBanner(this.newBanner)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
+            this.$message.success(res.message)
             this.dialogAddVisible = false
             this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
@@ -248,20 +187,17 @@ export default {
         this.$refs['newBannerRef'].resetFields()
       }
       // 查询并编辑用户信息
-      getBanner(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newBanner = res.data
+      getBanner(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newBanner = res.data
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteBanner, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteBanner, this.fetchData)

@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddPlant">添加植物</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('plant', this)">添加植物</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -96,12 +96,12 @@
     <el-dialog title="添加植物" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
       <el-form ref="newPlantRef" :inline="false" :model="newPlant" :rules="newPlantRules" label-width="80px">
         <el-row>
-          <el-col :span="8">
+          <el-col :span="6">
             <el-form-item label="名称" prop="name">
               <el-input v-model="newPlant.name" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="6">
             <el-form-item label="英文名" prop="engName">
               <el-input v-model="newPlant.engName" />
             </el-form-item>
@@ -111,37 +111,20 @@
               <el-input v-model="newPlant.jpnName" />
             </el-form-item>
           </el-col> -->
-          <el-col :span="8">
+          <el-col :span="5">
             <el-form-item label="价格" prop="price">
               <el-input v-model.number="newPlant.price" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="7">
             <el-form-item label="种类" prop="type">
               <el-select v-model="newPlant.type" multiple collapse-tags placeholder="请选择种类">
                 <el-option v-for="item in typeList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="16">
-            <el-form-item label="照片" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="false"
-                :with-credentials="true"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="this.newPlant.photoSrc">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
-            </el-form-item>
-          </el-col>
         </el-row>
-        <el-row v-show="isSeed">
+        <el-row v-show="notSeed">
           <el-col :span="8">
             <el-form-item label="来源" prop="channel">
               <el-radio-group v-model="newPlant.channel">
@@ -192,6 +175,11 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="照片" prop="photoSrc">
+              <upload-single v-model="newPlant.photoSrc" dialogWidth="30%" drag />
+            </el-form-item>
+          </el-col>
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -203,14 +191,10 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getPlants, addPlant, getPlant, deletePlant, searchPlant } from '@/api/plant'
 import { searchMaterial } from '@/api/material'
 export default {
   name: 'Plant',
-  components: { Pagination },
   data() {
     return {
       list: null,
@@ -281,14 +265,7 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
-    isSeed() {
+    notSeed() {
       //如果是种子类型隐藏部分选项
       let isSeed = this.newPlant.type.includes('种子') || this.newPlant.type.includes('树苗')
       return !isSeed
@@ -308,51 +285,42 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getPlants(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getPlants(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getPlantList(query, type) {
+      if (!query.trim()) return
       if (type === 'mix') {
-        searchMaterial(query).then(response => {
-          if (!response.data) return
-          let listname = type + 'List'
-          this[listname] = response.data.map(v => {
-            return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
+        searchMaterial(query)
+          .then(response => {
+            console.log(response)
+            if (response.data.length === 0) return
+            console.log(1111)
+            let listname = type + 'List'
+            this[listname] = response.data.map(v => {
+              return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
+            })
           })
-        })
+          .catch(err => this.$message.error(err.message))
       } else {
-        searchPlant(query).then(response => {
-          if (!response.data) return
-          let listname = type + 'List'
-          this[listname] = response.data.map(v => {
-            return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
+        searchPlant(query)
+          .then(response => {
+            if (response.data.length === 0) return
+            let listname = type + 'List'
+            this[listname] = response.data.map(v => {
+              return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
+            })
           })
-        })
+          .catch(err => this.$message.error(err.message))
       }
-    },
-    handleRemove(file) {
-      this.newPlant.photoSrc = ''
-    },
-    handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newPlant.photoSrc = src
-    },
-    openAddPlant() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newPlantRef'].resetFields()
-      })
     },
     dialogAddClose() {
       this.$refs.newPlantRef.resetFields()
-      this.$refs.upload.clearFiles()
       delete this.newPlant._id
       delete this.newPlant.__v
       this.seedList = []
@@ -360,56 +328,40 @@ export default {
       this.growStage = ['', '', '', '', '']
       //this.plantList = []
     },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     postPlant() {
       this.newPlant.growStage = this.newPlant.growStage.filter(m => m.name !== '')
       this.$refs.newPlantRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         addPlant(this.newPlant)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
+            this.$message.success(res.message)
             this.dialogAddVisible = false
             this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
       if (this.$refs['newPlantRef']) {
         this.$refs['newPlantRef'].resetFields()
       }
-      getPlant(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newPlant = res.data
-          if (this.newPlant.channel === '种子') {
-            this.seedList[0] = this.newPlant.seed
-          } else if (this.newPlant.channel === '花卉杂交') {
-            this.mixList = this.newPlant.mixPlant
-          }
+      getPlant(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newPlant = res.data
+            if (this.newPlant.channel === '种子') {
+              this.seedList[0] = this.newPlant.seed
+            } else if (this.newPlant.channel === '花卉杂交') {
+              this.mixList = this.newPlant.mixPlant
+            }
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deletePlant, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deletePlant, this.fetchData)

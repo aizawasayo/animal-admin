@@ -39,11 +39,12 @@ service.interceptors.response.use(
    */
   response => {
     const res = response.data
+    const statusCode = res.code || response.status  // 直接获取http相应码而不再去data里获取code
     // 响应码不是200, 解析返回的错误
-    if (res.code !== 200) { // 服务端自定义错误信息字段为 message
+    if (statusCode !== 200) { // 服务端自定义错误信息字段为 message
       // Message({ message: res.message || 'Error', type: 'error', duration: 5 * 1000 })
       // 508: Illegal token; 512: Other clients logged in; 514: Token expired;
-      if (res.code === 508 || res.code === 512 || res.code === 514) {
+      if (statusCode === 508 || statusCode === 512 || statusCode === 514) {
         // to re-login
         MessageBox.confirm('你已经登出了账户, 你可以关闭这个页面，或者重新登录', '确认登出', {
           confirmButtonText: '重新登录',
@@ -63,7 +64,7 @@ service.interceptors.response.use(
   },
   error => {
     console.log('请求/响应失败：' + error) // for debug
-    Message({ message: error.message, type: 'error', duration: 6 * 1000 })
+    Message({ message: error.message, type: 'error', duration: 15 * 1000 })
     return Promise.reject(error)
   }
 )

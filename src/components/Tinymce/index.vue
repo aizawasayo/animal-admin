@@ -12,7 +12,6 @@
  * docs:
  * https://panjiachen.github.io/vue-element-admin-site/feature/component/rich-editor.html#tinymce
  */
-import { mapGetters } from 'vuex'
 import editorImage from './components/EditorImage'
 import plugins from './plugins'
 import toolbar from './toolbar'
@@ -72,7 +71,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['uploadUrl']),
     containerWidth() {
       const width = this.width
       if (/^[\d]+(\.[\d]+)?$/.test(width)) {
@@ -134,7 +132,7 @@ export default {
           var file = blobInfo.blob() //转化为易于理解的file对象
           xhr = new XMLHttpRequest()
           xhr.withCredentials = false
-          xhr.open('POST', process.env.VUE_APP_BASE_API + '/admin/user/upload')
+          xhr.open('POST', process.env.VUE_APP_BASE_API + '/admin/single/upload')
           xhr.onload = function () {
             var json
             if (xhr.status != 200) {

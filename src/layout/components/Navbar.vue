@@ -1,7 +1,6 @@
 <template>
   <div class="navbar">
     <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
-
     <breadcrumb class="breadcrumb-container" />
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
@@ -32,10 +31,7 @@ import Hamburger from '@/components/Hamburger'
 export default {
   components: { Breadcrumb, Hamburger },
   computed: {
-    ...mapGetters(['sidebar', 'avatar']),
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
+    ...mapGetters(['sidebar', 'avatar'])
   },
   methods: {
     toggleSideBar() {
@@ -43,7 +39,7 @@ export default {
     },
     async logout() {
       await this.$store.dispatch('user/logout')
-      this.$message('登出成功')
+      this.$message.success('登出成功')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }

@@ -46,7 +46,6 @@
 <script>
 import DesignList from '../components/DesignList'
 import AddDesign from '../components/AddDesign'
-import { mapState } from 'vuex'
 import { getDesign } from '@/api/design'
 
 export default {
@@ -71,11 +70,8 @@ export default {
   computed: {
     // 获取app模块的uploadUrl的三种方式
     // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
+    // ...mapState('app', { uploadUrl: state => state.uploadUrl }),
     // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     tabIndex() {
       return this.tabOptions.findIndex(item => item.key === this.activeName)
     }
@@ -110,10 +106,12 @@ export default {
     },
     handleEdit(arg) {
       const id = arg[0]
-      getDesign(id).then(res => {
-        this.dialogAddVisible = true
-        this.newDesign = res.data
-      })
+      getDesign(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.newDesign = res.data
+        })
+        .catch(err => this.$message.error(err.message))
     },
     handelMultipleDelete() {
       this.$refs.designList[this.tabIndex].handelMultipleDelete()

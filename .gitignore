@@ -6,6 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 tests/**/coverage/
+test.html
+test1.html
+test2.html
+mock/
 
 # Editor directories and files
 .idea

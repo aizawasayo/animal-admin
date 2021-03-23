@@ -101,7 +101,8 @@ export default {
 
               this.loading = false
             })
-            .catch(() => {
+            .catch(err => {
+              this.$message.error(err.message)
               this.loading = false
             })
         } else {

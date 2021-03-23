@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddIslander">添加岛民</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('islander', this)">添加岛民</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -35,9 +35,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true" />
       <el-table-column align="center" label="序号" width="55">
@@ -124,7 +124,13 @@
     >
     </el-pagination> -->
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="添加岛民" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="添加岛民"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('islander', this)"
+    >
       <el-form ref="newIslanderRef" :inline="false" :model="newIslander" :rules="newIslanderRules" label-width="80px">
         <el-row>
           <el-col :span="8">
@@ -138,6 +144,13 @@
                 <el-radio v-for="item in sexList" :label="item.value">{{ item.text }}</el-radio>
                 <!-- <el-radio :label="0">♀</el-radio> -->
               </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="种族" prop="breed">
+              <el-select v-model="newIslander.breed" placeholder="请选择种族">
+                <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="16">
@@ -154,13 +167,6 @@
                 </el-form-item>
               </el-col>
               <el-col :span="2" class="birth-text">日</el-col>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="种族" prop="breed">
-              <el-select v-model="newIslander.breed" placeholder="请选择种族">
-                <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
-              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -221,9 +227,10 @@
               <el-input v-model="newIslander.ideal" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <el-upload
+              <upload-single v-model="newIslander.photoSrc" drag />
+              <!-- <el-upload
                 ref="upload"
                 :action="uploadUrl"
                 name="photoSrc"
@@ -232,10 +239,11 @@
                 :show-file-list="true"
                 :on-remove="handleRemove"
                 :on-success="handleSuccess"
+                :on-error="handleError"
               >
                 <el-button size="small" type="success" v-if="this.newIslander.photoSrc">已上传，可点击修改</el-button>
                 <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              </el-upload> -->
             </el-form-item>
           </el-col>
         </el-row>
@@ -249,14 +257,13 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import Pagination from '@/components/Pagination'
+// import Pagination from '@/components/Pagination'
 import { getIslanders, addIslander, getIslander, deleteIslander } from '@/api/islander'
 import getOption from '@/utils/get-option'
 
 export default {
   name: 'Islander',
-  components: { Pagination },
+  // components: { Pagination },
   data() {
     const checkMonth = (rule, value, callback) => {
       if (!value) {
@@ -356,23 +363,20 @@ export default {
     this.fetchData()
     this.getOptions()
   },
-  computed: {
-    ...mapGetters(['uploadUrl']),
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
-  },
+  computed: {},
   methods: {
     fetchData(param) {
       this.listLoading = true
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getIslanders(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total
-        this.listLoading = false
-      })
+      getIslanders(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('breed', list => {
@@ -402,49 +406,38 @@ export default {
     //   this.queryInfo.page = newPage
     //   this.fetchData()
     // },
-    handleRemove(file) {
-      this.newIslander.photoSrc = ''
-    },
-    handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newIslander.photoSrc = src
-    },
-    openAddIslander() {
-      // 打开新增岛民弹窗并重置表单
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newIslanderRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newIslanderRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newIslander._id
-      delete this.newIslander.__v
-      // for (let key of Object.keys(this.newIslander)) {
-      //   if (key === 'sex') {
-      //     this.newIslander[key] = null
-      //   } else {
-      //     this.newIslander[key] = ""
-      //   }
-      // }
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
+    // handleRemove(file) {
+    //   this.newIslander.photoSrc = ''
+    // },
+    // handleSuccess(res) {
+    //   // 图片上传成功后把临时地址保存到表单photoSrc属性中
+    //   this.newIslander.photoSrc = this.commonApi.uploadSuccess(res)
+    // },
+    // handleError(err) {
+    //   this.$message({ message: err.message, type: 'error' })
+    // },
+    // openAddIslander() {
+    //   // 打开新增岛民弹窗并重置表单
+    //   this.dialogAddVisible = true
+    //   // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
+    //   this.$nextTick(function () {
+    //     // 打开新增弹窗后先重置表单 避免表单出现上一次新增的校验数据
+    //     this.$refs['newIslanderRef'].resetFields()
+    //   })
+    // },
+    // dialogAddClose() {
+    //   this.$refs.newIslanderRef.resetFields()
+    //   this.$refs.upload.clearFiles()
+    //   delete this.newIslander._id
+    //   delete this.newIslander.__v
+    //   // for (let key of Object.keys(this.newIslander)) {
+    //   //   if (key === 'sex') {
+    //   //     this.newIslander[key] = null
+    //   //   } else {
+    //   //     this.newIslander[key] = ""
+    //   //   }
+    //   // }
+    // },
     postIslander() {
       this.$refs.newIslanderRef.validate(valid => {
         this.newIslander.birth = this.newIslander.month + '月' + this.newIslander.date + '日'
@@ -452,13 +445,13 @@ export default {
         if (!valid) return this.$message.error('请修改有误的表单项')
         addIslander(this.newIslander)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
+            this.$message.success(res.message)
+            // this.$refs.upload.clearFiles()
             this.dialogAddVisible = false
             // this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
@@ -466,25 +459,22 @@ export default {
         this.$refs['newIslanderRef'].resetFields()
       }
       // 查询并编辑岛民信息
-      getIslander(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newIslander = res.data
-          const birth = res.data.birth
-          this.newIslander.month = parseInt(birth.split('月')[0])
-          let date = birth.split('月')[1]
-          date = parseInt(date.substring(0, date.length - 1))
-          this.newIslander.date = date
+      getIslander(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newIslander = res.data
+            const birth = res.data.birth
+            this.newIslander.month = parseInt(birth.split('月')[0])
+            let date = birth.split('月')[1]
+            date = parseInt(date.substring(0, date.length - 1))
+            this.newIslander.date = date
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteIslander, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteIslander, this.fetchData)

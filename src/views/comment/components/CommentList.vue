@@ -8,9 +8,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -57,12 +57,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getComments, deleteComment } from '@/api/comment'
 
 export default {
   name: 'CommentList',
-  components: { Pagination },
   props: {
     type: {
       type: String
@@ -89,10 +87,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId']), // 推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
+    ...mapGetters(['userId']) // 推荐这种
   },
   watch: {
     queryKey(newVal) {
@@ -108,30 +103,16 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getComments(this.type, this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
+      getComments(this.type, this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteComment, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteComment, this.fetchData)

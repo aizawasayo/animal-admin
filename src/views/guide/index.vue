@@ -37,9 +37,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -55,7 +55,7 @@
       </el-table-column>
       <el-table-column label="标题" align="center" prop="title" sortable="custom">
         <template slot-scope="scope">
-          {{ scope.row.title | introFilter }}
+          {{ scope.row.title | textFilter(15) }}
         </template>
       </el-table-column>
       <el-table-column width="180px" align="center" label="发布时间" prop="display_time" sortable="custom">
@@ -94,13 +94,10 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getGuides, addGuide, getGuide, deleteGuide } from '@/api/guide'
 
 export default {
   name: 'Guide',
-  components: { Pagination },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -109,9 +106,6 @@ export default {
         deleted: 'danger'
       }
       return statusMap[status]
-    },
-    introFilter(text) {
-      return text.length > 15 ? text.substring(0, 15) + '...' : text
     }
   },
   data() {
@@ -141,15 +135,7 @@ export default {
       multipleSelection: []
     }
   },
-  computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
-  },
+  computed: {},
   created() {
     this.fetchData()
   },
@@ -165,36 +151,20 @@ export default {
         this.listLoading = false
       })
     },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteGuide, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteGuide, this.fetchData)
     },
     commentHandler(state, id) {
       //修改评论开放与否
-      addGuide({ _id: id, comment_disabled: state }).then(res => {
-        if (res.code === 200) {
-          this.$message({ type: 'success', message: '修改评论状态成功！' })
+      addGuide({ _id: id, comment_disabled: state })
+        .then(res => {
+          this.$message.success('修改评论状态成功')
           this.fetchData()
-        }
-      })
+        })
+        .catch(err => this.$message.error(err.message)
     }
   }
 }

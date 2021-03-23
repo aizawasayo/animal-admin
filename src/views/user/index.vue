@@ -28,9 +28,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -169,21 +169,9 @@
               <el-input v-model="newUser.password" type="password" show-password />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="头像" prop="avatar">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="avatar"
-                :multiple="false"
-                :with-credentials="true"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button v-if="this.newUser.avatar" size="small" type="success">已上传，可点击修改</el-button>
-                <el-button v-else size="small" type="primary"><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-single v-model="newUser.avatar" drag />
             </el-form-item>
           </el-col>
         </el-row>
@@ -197,13 +185,11 @@
 </template>
 
 <script>
-import Pagination from '@/components/Pagination'
 import { getUsers, addUser, getUser, editUser, deleteUser } from '@/api/user'
 import { timestamp, parseTime, standardTime } from '@/utils'
 
 export default {
   name: 'User',
-  components: { Pagination },
   data() {
     const checkPass = (rule, value, callback) => {
       // 至少8个字符，至少1个大写字母，1个小写字母和1个数字,不能包含特殊字符（非数字字母）：
@@ -273,15 +259,7 @@ export default {
       }
     }
   },
-  computed: {
-    uploadUrl() {
-      const url = process.env.VUE_APP_BASE_API + '/admin/user/upload'
-      return url
-    },
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
-  },
+  computed: {},
   created() {
     this.fetchData()
   },
@@ -297,44 +275,20 @@ export default {
         this.listLoading = false
       })
     },
-    handleRemove(file) {
-      this.newUser.avatar = ''
-    },
-    handleSuccess(res) {
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newUser.avatar = src
-    },
     openAddUser() {
       this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
       this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
         this.$refs['newUserRef'].resetFields()
       })
     },
     dialogAddClose() {
       this.$refs.newUserRef.resetFields()
-      this.$refs.upload.clearFiles()
       this.newUser.email = ''
       delete this.newUser._id
       delete this.newUser.__v
       delete this.newUser.psw
     },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     postUser() {
-      // 新增用户
       this.$refs.newUserRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         const timeString = parseTime(this.newUser.startDate)
@@ -342,28 +296,26 @@ export default {
         if (this.newUser._id) {
           editUser(this.newUser._id, this.newUser)
             .then(res => {
-              this.$message({ message: res.message, type: 'success' })
-              this.$refs.upload.clearFiles()
+              this.$message.success(res.message)
               this.dialogAddVisible = false
               this.queryInfo.page = 1
               this.fetchData()
             })
             .catch(err => {
               this.newUser.startDate = null
-              this.$message({ message: `修改失败，${err.message}！`, type: 'error' })
+              this.$message.error(`修改失败，${err.message}！`)
             })
         } else {
           addUser(this.newUser)
             .then(res => {
-              this.$message({ message: res.message, type: 'success' })
-              this.$refs.upload.clearFiles()
+              this.$message.success(res.message)
               this.dialogAddVisible = false
               this.queryInfo.page = 1
               this.fetchData()
             })
             .catch(err => {
               this.newUser.startDate = null
-              this.$message({ message: `添加失败，${err.message}！`, type: 'error' })
+              this.$message.error(`添加失败，${err.message}！`)
             })
         }
       })
@@ -373,19 +325,20 @@ export default {
         this.$refs['newUserRef'].resetFields()
       }
       // 查询并编辑用户信息
-      getUser(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newUser = res.data
-          if (this.newUser.startDate) {
-            this.newUser.startDate = standardTime(this.newUser.startDate)
-          }
+      getUser(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newUser = res.data
+            if (this.newUser.startDate) {
+              this.newUser.startDate = standardTime(this.newUser.startDate)
+            }
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id, roles) {
-      if (roles && roles.includes('admin')) return this.$message('不能删除管理员！')
+      if (roles && roles.includes('admin')) return this.$message.warning('不能删除管理员！')
       // 删除用户方法，可批量
       this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -393,29 +346,22 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          deleteUser(id).then(res => {
-            this.$message({ type: 'success', message: res.message })
-            this.fetchData()
-          })
+          deleteUser(id)
+            .then(res => {
+              this.$message.success(res.message)
+              this.fetchData()
+            })
+            .catch(err => this.$message.error(err.message))
         })
-        .catch(() => {
-          this.$message({ type: 'info', message: '已取消删除' })
-        })
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
+        .catch(() => this.$message.info('已取消删除'))
     },
     handelMultipleDelete() {
       // 批量删除岛民
       if (this.multipleSelection.length === 0) {
-        return this.$message({
-          type: 'warning',
-          message: '请先选中至少一条数据！'
-        })
+        return this.$message.warning('请先选中至少一条数据！')
       }
-      let id = '',
-        flag = true
+      let id = ''
+      let flag = true
       this.multipleSelection.forEach(val => {
         if (val.roles.includes('admin')) {
           flag = false
@@ -426,10 +372,7 @@ export default {
         id = id.substring(0, id.length - 1)
         this.handleDelete(id)
       } else {
-        this.$message({
-          type: 'warning',
-          message: '没有权限删除管理员！'
-        })
+        this.$message.warning('没有权限删除管理员！')
       }
     }
   }

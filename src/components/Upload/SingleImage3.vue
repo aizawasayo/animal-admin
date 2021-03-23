@@ -3,7 +3,6 @@
   <div class="upload-container">
     <el-upload
       name="avatar"
-      :data="dataObj"
       :multiple="false"
       :show-file-list="false"
       :on-success="handleImageSuccess"
@@ -34,8 +33,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 export default {
   name: 'SingleImageUpload3',
   props: {
@@ -45,16 +42,11 @@ export default {
     }
   },
   data() {
-    return {
-      tempUrl: '',
-      dataObj: { token: '', key: '' }
-    }
+    return {}
   },
   computed: {
-    // ...mapGetters(['uploadUrl']),
     uploadUrl() {
-      const url = process.env.VUE_APP_BASE_API + '/admin/user/upload'
-      return url
+      return process.env.VUE_APP_BASE_API + '/admin/single/upload'
     },
     imageUrl() {
       return this.value ? process.env.VUE_APP_BASE_API + this.value : ''
@@ -69,8 +61,7 @@ export default {
     },
     handleImageSuccess(response) {
       let fileSrc = response.data.path
-      this.tempUrl = fileSrc.replace('/public', '')
-      this.emitInput(this.tempUrl)
+      this.emitInput(fileSrc.replace('/public', ''))
     },
     beforeUpload() {}
   }
@@ -79,6 +70,9 @@ export default {
 
 <style lang="scss" scoped>
 @import '~@/styles/mixin.scss';
+.upload-container .el-upload .el-upload-dragger {
+  height: 200px;
+}
 .upload-container {
   width: 100%;
   position: relative;
@@ -86,6 +80,9 @@ export default {
   .image-uploader {
     width: 35%;
     float: left;
+  }
+  .image-uploader >>> .el-upload {
+    width: 100%;
   }
   .image-preview {
     width: 200px;
@@ -131,7 +128,7 @@ export default {
   }
   .image-app-preview {
     width: 320px;
-    height: 180px;
+    height: 200px;
     position: relative;
     border: 1px dashed #d9d9d9;
     float: left;

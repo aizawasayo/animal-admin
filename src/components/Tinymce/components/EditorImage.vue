@@ -7,9 +7,9 @@
     <el-dialog :visible.sync="dialogVisible">
       <el-upload
         name="photoSrc"
-        :multiple="true"
+        multiple
         :file-list="fileList"
-        :show-file-list="true"
+        show-file-list
         :on-remove="handleRemove"
         :on-success="handleSuccess"
         :before-upload="beforeUpload"
@@ -50,11 +50,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['uploadUrl']),
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    }
-    // https://httpbin.org/post
+    ...mapGetters(['uploadUrl'])
   },
   methods: {
     checkAllSuccess() {
@@ -63,7 +59,7 @@ export default {
     handleSubmit() {
       const arr = Object.keys(this.listObj).map(v => this.listObj[v])
       if (!this.checkAllSuccess()) {
-        this.$message('请等待所有图片上传成功。如果有网络问题，请刷新页面并重新上传!')
+        this.$message.warning('请等待所有图片上传成功。如果有网络问题，请刷新页面并重新上传!')
         return
       }
       this.$emit('successCBK', arr)

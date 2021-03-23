@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddTool">添加工具</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('tool', this)">添加工具</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -97,7 +97,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="添加工具" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="添加工具"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('tool', this)"
+    >
       <el-form ref="newToolRef" :inline="false" :model="newTool" :rules="newToolRules" label-width="80px">
         <el-row>
           <el-col :span="24">
@@ -147,21 +153,9 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="false"
-                :with-credentials="true"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="this.newTool.photoSrc">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-single v-model="newTool.photoSrc" dialogWidth="30%" drag />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -180,14 +174,11 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import getOption from '@/utils/get-option'
 import { getTools, addTool, getTool, deleteTool } from '@/api/tool'
 
 export default {
   name: 'Tool',
-  components: { Pagination },
   filters: {},
   data() {
     return {
@@ -230,13 +221,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     isDIYBL() {
       let bl = false
       if (this.newTool.isDIY !== null && this.newTool.isDIY === true) bl = true
@@ -258,11 +242,13 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getTools(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getTools(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('toolChannels', list => {
@@ -272,66 +258,31 @@ export default {
         this.activityList = list
       })
     },
-    handleRemove(file) {
-      this.newTool.photoSrc = ''
-    },
-    handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newTool.photoSrc = src
-    },
-    openAddTool() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newToolRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newToolRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newTool._id
-      delete this.newTool.__v
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     postTool() {
       this.$refs.newToolRef.validate(valid => {
         if (!valid) return this.$message.error('请修改有误的表单项')
         addTool(this.newTool)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
+            this.$message.success(res.message)
             this.dialogAddVisible = false
             // if (!this.newTool._id) this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
       if (this.$refs['newToolRef']) {
         this.$refs['newToolRef'].resetFields()
       }
-      getTool(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newTool = res.data
+      getTool(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newTool = res.data
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     changeDIY(val) {
       if (val) {
@@ -342,10 +293,6 @@ export default {
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteTool, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteTool, this.fetchData)

@@ -128,10 +128,7 @@ export default {
   data() {
     const validateRequire = (rule, value, callback) => {
       if (value === '') {
-        this.$message({
-          message: rule.field + '为必传项',
-          type: 'error'
-        })
+        this.$message.error(rule.field + '为必传项')
         callback(new Error(rule.field + '为必传项'))
       } else {
         callback()
@@ -158,7 +155,7 @@ export default {
       userListOptions: [],
       typeOptions: ['活动大全', '攻略合集'],
       rules: {
-        // image_uri: [{ validator: validateRequire }],
+        image_uri: [{ validator: validateRequire }],
         author: [{ validator: validateRequire }],
         type: [{ validator: validateRequire }],
         title: [{ validator: validateRequire }],
@@ -208,9 +205,7 @@ export default {
           // set page title
           this.setPageTitle()
         })
-        .catch(err => {
-          console.log(err)
-        })
+        .catch(err => this.$message.error(err.message))
     },
     setTagsViewTitle() {
       const title = '编辑文章'
@@ -230,17 +225,15 @@ export default {
           this.loading = true
           addGuide(this.postForm)
             .then(res => {
-              if (res.code === 200) {
-                this.$notify({
-                  title: '成功',
-                  message: res.message,
-                  type: 'success',
-                  duration: 2000
-                })
-              }
+              this.$notify({
+                title: '成功',
+                message: res.message,
+                type: 'success',
+                duration: 2000
+              })
               this.loading = false
             })
-            .catch(err => this.$message({ message: err.message, type: 'error' }))
+            .catch(err => this.$message.error(err.message))
         } else {
           this.$message.error('请填写必要的标题和内容')
           return false
@@ -266,12 +259,15 @@ export default {
     //   })
     // },
     getUserList(query) {
-      searchUser(query).then(response => {
-        if (!response.data) return
-        let userId = (this.userListOptions = response.data.map(v => {
-          return { username: v.username, _id: v._id }
-        }))
-      })
+      if (!query.trim()) return
+      searchUser(query)
+        .then(response => {
+          if (response.data.length === 0) return
+          let userId = (this.userListOptions = response.data.map(v => {
+            return { username: v.username, _id: v._id }
+          }))
+        })
+        .catch(err => this.$message.error(err.message))
     }
   }
 }

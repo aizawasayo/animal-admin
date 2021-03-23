@@ -43,7 +43,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import OptionList from '../components/OptionList'
 import AddOption from '../components/AddOption'
 import { getOption } from '@/api/option'
@@ -70,13 +69,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     tabIndex() {
       return this.tabOptions.findIndex(item => item.key === this.activeName)
     }
@@ -112,10 +104,12 @@ export default {
     handleEdit(arg) {
       let id = arg[0]
       let type = arg[1]
-      getOption(id).then(res => {
-        this.dialogAddVisible = true
-        this.newOption = res.data
-      })
+      getOption(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.newOption = res.data
+        })
+        .catch(err => this.$message.error(err.message))
     },
     handelMultipleDelete() {
       this.$refs.optionList[this.tabIndex].handelMultipleDelete()

@@ -17,10 +17,22 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+// import * as ：一次性导入包含全部变量的模块对象
 import * as filters from './filters' // global filters
+// 导入模块中 名为 globalComs 的 变量
+import { globalComs } from './globalComs'
 
-import commonApi from '@/utils/common'
+import * as commonApi from '@/utils/common'
 Vue.prototype.commonApi = commonApi
+
+Vue.prototype.apiUrl = process.env.VUE_APP_BASE_API
+
+// 批量注册全局公共组件
+// import UploadSingle from '@/components/Upload/SingleUpload'
+// Vue.component('upload-single', UploadSingle)
+globalComs.forEach(item => {
+  Vue.component(item.name, item.component)
+})
 
 /**
  * If you don't want to use mock-server
@@ -37,7 +49,7 @@ if (process.env.NODE_ENV === 'production') {
   // mockXHR()
 }
 
-// set ElementUI lang to EN
+// set ElementUI lang to CN
 Vue.use(ElementUI, {
   locale,
   size: Cookies.get('size') || 'medium' // set element-ui default size

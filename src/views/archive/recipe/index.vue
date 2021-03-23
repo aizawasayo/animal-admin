@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddRecipe">添加DIY配方</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('recipe', this)">添加DIY配方</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -183,23 +183,6 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="照片" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="false"
-                :with-credentials="true"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="this.newRecipe.photoSrc">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
-            </el-form-item>
-          </el-col>
         </el-row>
         <el-row>
           <el-col :span="4">
@@ -231,6 +214,11 @@
             >
           </el-col>
           <el-col :span="24">
+            <el-form-item label="照片" prop="photoSrc">
+              <upload-single v-model="newRecipe.photoSrc" dialogWidth="30%" drag />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
             <el-form-item label="途径说明" prop="channelDetail">
               <el-input v-model="newRecipe.channelDetail" type="textarea" placeholder="请输入具体途径说明" />
             </el-form-item>
@@ -246,8 +234,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getRecipes, addRecipe, getRecipe, deleteRecipe, searchRecipe } from '@/api/recipe'
 import { searchMaterial } from '@/api/material'
 import { searchFurniture } from '@/api/furniture'
@@ -257,7 +243,6 @@ import getOption from '@/utils/get-option'
 
 export default {
   name: 'Recipe',
-  components: { Pagination },
   filters: {},
   data() {
     return {
@@ -329,13 +314,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     isNpc() {
       let isNpc = this.newRecipe.channels.includes('NPC')
       return isNpc
@@ -355,11 +333,13 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getRecipes(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total
-        this.listLoading = false
-      })
+      getRecipes(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('diyType', list => {
@@ -385,76 +365,54 @@ export default {
       })
     },
     getMaterialList(query) {
-      searchMaterial(query).then(response => {
-        if (!response.data) return
-        this.materialList = response.data.map(v => {
-          return { name: v.name, _id: v._id, photoSrc: v.photoSrc, num: 1 }
-        })
-        if (this.materialList.length === 0) {
-          searchFurniture(query).then(res => {
-            if (!res.data) return
-            this.materialList = res.data.map(w => {
-              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
-            })
-            if (this.materialList.length === 0) {
-              searchClothing(query).then(res => {
-                if (!res.data) return
+      if (!query.trim()) return
+      searchMaterial(query)
+        .then(response => {
+          if (response.data.length === 0) return
+          this.materialList = response.data.map(v => {
+            return { name: v.name, _id: v._id, photoSrc: v.photoSrc, num: 1 }
+          })
+          if (this.materialList.length === 0) {
+            searchFurniture(query)
+              .then(res => {
+                if (!res.data.length === 0) return
                 this.materialList = res.data.map(w => {
                   return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
                 })
                 if (this.materialList.length === 0) {
-                  searchRecipe(query).then(res => {
-                    if (!res.data) return
-                    this.materialList = res.data.map(w => {
-                      return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+                  searchClothing(query)
+                    .then(res1 => {
+                      if (!res1.data.length === 0) return
+                      this.materialList = res.data.map(w => {
+                        return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+                      })
+                      if (this.materialList.length === 0) {
+                        searchRecipe(query)
+                          .then(res2 => {
+                            if (!res2.data.length === 0) return
+                            this.materialList = res.data.map(w => {
+                              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+                            })
+                          })
+                          .catch(err => this.$message.error(err.message))
+                      }
                     })
-                  })
+                    .catch(err => this.$message.error(err.message))
                 }
               })
-            }
-          })
-        }
-      })
+              .catch(err => this.$message.error(err.message))
+          }
+        })
+        .catch(err => this.$message.error(err.message))
     },
     addMaterials() {
       this.newRecipe.materials.push({ photoSrc: '', num: 1, name: '' })
     },
-
-    handleRemove(file) {
-      this.newRecipe.photoSrc = ''
-    },
-    handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let src = res.data.path
-      src = src.replace('/public', '')
-      this.newRecipe.photoSrc = src
-    },
-    openAddRecipe() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newRecipeRef'].resetFields()
-      })
-    },
     dialogAddClose() {
       this.$refs.newRecipeRef.resetFields()
-      this.$refs.upload.clearFiles()
       delete this.newRecipe._id
       delete this.newRecipe.__v
       this.materialList = []
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
     },
     postRecipe() {
       this.newRecipe.materials = this.newRecipe.materials.filter(m => m.name !== '')
@@ -462,35 +420,32 @@ export default {
         if (!valid) return this.$message.error('请修改有误的表单项')
         addRecipe(this.newRecipe)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
+            this.$message.success(res.message)
             this.dialogAddVisible = false
             // if (!this.newRecipe._id) this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
       if (this.$refs['newRecipeRef']) {
         this.$refs['newRecipeRef'].resetFields()
       }
-      getRecipe(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newRecipe = res.data
-          this.materialList = this.newRecipe.materials
+      getRecipe(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newRecipe = res.data
+            this.materialList = this.newRecipe.materials
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteRecipe, this.fetchData)
     },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
-    },
+
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteRecipe, this.fetchData)
     }

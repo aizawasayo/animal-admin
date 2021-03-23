@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -92,7 +92,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="发布信息" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="发布信息"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('turnip', this)"
+    >
       <el-form ref="newTurnipRef" :inline="false" :model="newTurnip" :rules="newTurnipRules" label-width="80px">
         <el-row>
           <el-col :span="8">
@@ -181,13 +187,11 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getTurnipList, addTurnip, getTurnip, deleteTurnip } from '@/api/turnip'
 import { timestamp, parseTime, standardTime } from '@/utils'
 
 export default {
   name: 'Turnip',
-  components: { Pagination },
   filters: {
     statusFilter(time) {
       let status = time > timestamp() ? 'success' : 'info'
@@ -277,29 +281,23 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getTurnipList(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getTurnipList(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     openAddTurnip() {
       this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
       this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
         this.$refs['newTurnipRef'].resetFields()
-
         if (!this.newTurnip._id) {
           this.newTurnip.validTime = this.nowVaildTime()
           this.$forceUpdate()
         }
       })
-    },
-    dialogAddClose() {
-      this.$refs.newTurnipRef.resetFields()
-      delete this.newTurnip._id
-      delete this.newTurnip.__v
     },
     nowVaildTime() {
       const time = new Date()
@@ -310,18 +308,6 @@ export default {
       const mm = time.getMinutes()
       const val = new Date(yy, month, dd, hh, mm)
       return val
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
     },
     postTurnip() {
       const timeString = parseTime(this.newTurnip.validTime)
@@ -336,34 +322,31 @@ export default {
         }
         addTurnip(this.newTurnip)
           .then(res => {
-            this.$message({ message: res.message, type: 'success' })
+            this.$message.success(res.message)
             this.dialogAddVisible = false
             // if (!this.newTurnip._id) this.queryInfo.page = 1
             this.fetchData()
           })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+          .catch(err => this.$message.error(err.message))
       })
     },
     handleEdit(id) {
       if (this.$refs['newTurnipRef']) {
         this.$refs['newTurnipRef'].resetFields()
       }
-      getTurnip(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newTurnip = res.data
-          //this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
-          this.newTurnip.validTime = this.nowVaildTime()
+      getTurnip(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newTurnip = res.data
+            //this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
+            this.newTurnip.validTime = this.nowVaildTime()
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteTurnip, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteTurnip, this.fetchData)

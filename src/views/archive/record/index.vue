@@ -16,7 +16,7 @@
             </el-input>
           </el-col>
           <el-col :span="8">
-            <el-button type="primary" @click="openAddRecord">添加唱片</el-button>
+            <el-button type="primary" @click="() => commonApi.openAddForm('record', this)">添加唱片</el-button>
           </el-col>
         </el-row>
       </el-col>
@@ -32,9 +32,9 @@
       fit
       highlight-current-row
       :empty-text="emptyText"
-      @selection-change="handleSelectionChange"
-      @filter-change="filterChange"
-      @sort-change="sortChange"
+      @selection-change="selection => commonApi.handleSelectionChange(selection, this)"
+      @filter-change="filters => commonApi.filterChange(filters, this)"
+      @sort-change="sortInfo => commonApi.sortChange(sortInfo, this)"
     >
       <el-table-column type="selection" width="40" :show-overflow-tooltip="true"> </el-table-column>
       <el-table-column align="center" label="序号" width="55">
@@ -86,7 +86,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="queryInfo.page" :limit.sync="queryInfo.pageSize" @pagination="fetchData" />
-    <el-dialog title="添加唱片" :visible.sync="dialogAddVisible" width="60%" :close-on-click-modal="false" @close="dialogAddClose">
+    <el-dialog
+      title="添加唱片"
+      :visible.sync="dialogAddVisible"
+      width="60%"
+      :close-on-click-modal="false"
+      @close="() => commonApi.dialogAddClose('record', this)"
+    >
       <el-form ref="newRecordRef" :inline="false" :model="newRecord" :rules="newRecordRules" label-width="80px">
         <el-row>
           <el-col :span="8">
@@ -121,22 +127,9 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="24">
             <el-form-item label="封面" prop="photoSrc">
-              <el-upload
-                ref="upload"
-                :action="uploadUrl"
-                name="photoSrc"
-                :multiple="true"
-                :with-credentials="true"
-                :file-list="newRecord.photoSrc"
-                :show-file-list="true"
-                :on-remove="handleRemove"
-                :on-success="handleSuccess"
-              >
-                <el-button size="small" type="success" v-if="newRecord.photoSrc[0]">已上传，可点击修改</el-button>
-                <el-button size="small" type="primary" v-else><i class="el-icon-upload el-icon--left"></i>点击上传</el-button>
-              </el-upload>
+              <upload-multi ref="upload" drag :list="newRecord.photoSrc" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -150,20 +143,11 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import { mapState } from 'vuex'
-import Pagination from '@/components/Pagination'
 import { getRecords, addRecord, getRecord, deleteRecord } from '@/api/record'
 import getOption from '@/utils/get-option'
 
 export default {
   name: 'Record',
-  components: { Pagination },
-  filters: {
-    introFilter(text) {
-      return text ? text.substring(0, 10) + '...' : '无赝品'
-    }
-  },
   data() {
     return {
       list: null,
@@ -178,7 +162,6 @@ export default {
       total: 0,
       dialogAddVisible: false,
       emptyText: '没有相关数据',
-      uploadList: [], // 自定义的数组，用于处理fileList，fileList是只读的
       newRecord: {
         name: '',
         engName: '',
@@ -205,13 +188,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
-    apiUrl() {
-      return process.env.VUE_APP_BASE_API
-    },
     isSale() {
       let isSaleBl = this.newRecord.orderType === '订购'
       return isSaleBl
@@ -227,92 +203,50 @@ export default {
       if (param === 'new') {
         this.queryInfo.page = 1
       }
-      getRecords(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total || 0
-        this.listLoading = false
-      })
+      getRecords(this.queryInfo)
+        .then(response => {
+          this.list = response.data.list
+          this.total = response.data.total || 0
+          this.listLoading = false
+        })
+        .catch(err => this.$message.error(err.message))
     },
     getOptions() {
       getOption('size', list => {
         this.sizeList = list
       })
     },
-    handleRemove(file) {
-      let removePath = file.src
-      let removeIndex = this.newRecord.photoSrc.findIndex(item => item.src === removePath)
-      this.newRecord.photoSrc.splice(removeIndex)
-    },
-    handleSuccess(res) {
-      // 图片上传成功后把临时地址保存到表单photoSrc属性中
-      let files = res.data
-      let pic = files[0]
-      let src = pic.path
-      let name = pic.name
-      src = src.replace('/public', '')
-      let newPic = { name: name, src: src }
-      this.uploadList.push(newPic)
-    },
-    openAddRecord() {
-      this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      this.$nextTick(function () {
-        // 打开新增弹窗前先重置表单 避免表单出现上一次新增的校验数据
-        this.$refs['newRecordRef'].resetFields()
-      })
-    },
-    dialogAddClose() {
-      this.$refs.newRecordRef.resetFields()
-      this.$refs.upload.clearFiles()
-      delete this.newRecord._id
-      delete this.newRecord.__v
-    },
-    filterChange(filter) {
-      Object.assign(this.queryInfo, filter)
-      this.fetchData('new')
-    },
-    sortChange(sortInfo) {
-      let order = sortInfo.order
-      order === 'ascending' ? (order = 1) : (order = -1)
-      this.queryInfo.sortJson = {}
-      this.queryInfo.sortJson[sortInfo.prop] = order
-      this.queryInfo.sort = JSON.stringify(this.queryInfo.sortJson)
-      this.fetchData('new')
-    },
     postRecord() {
       this.$refs.newRecordRef.validate(valid => {
-        this.newRecord.photoSrc = this.newRecord.photoSrc.concat(this.uploadList)
-        this.uploadList = []
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addRecord(this.newRecord)
-          .then(res => {
-            this.$message({ message: res.message, type: 'success' })
-            this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            // if (!this.newRecord._id) this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message({ message: err.message, type: 'error' }))
+        this.$refs.upload.getUploadedList().then(uploads => {
+          this.newRecord.photoSrc = uploads.map(obj => ({ ...obj }))
+          if (!valid) return this.$message.error('请修改有误的表单项')
+          addRecord(this.newRecord)
+            .then(res => {
+              this.$message.success(res.message)
+              this.dialogAddVisible = false
+              // if (!this.newRecord._id) this.queryInfo.page = 1
+              this.fetchData()
+            })
+            .catch(err => this.$message.error(err.message))
+        })
       })
     },
     handleEdit(id) {
       if (this.$refs['newRecordRef']) {
         this.$refs['newRecordRef'].resetFields()
       }
-      getRecord(id).then(res => {
-        this.dialogAddVisible = true
-        // 回显数据
-        this.$nextTick(function () {
-          this.newRecord = res.data
+      getRecord(id)
+        .then(res => {
+          this.dialogAddVisible = true
+          this.$nextTick(function () {
+            this.newRecord = res.data
+          })
         })
-      })
+        .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteRecord, this.fetchData)
-    },
-    handleSelectionChange(val) {
-      // 监听多选并给多选数组赋值
-      this.multipleSelection = val
     },
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteRecord, this.fetchData)
