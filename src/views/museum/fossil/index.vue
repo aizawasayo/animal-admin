@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -172,45 +172,15 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getFossils(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getFossils, this)
     },
     postFossil() {
-      this.$refs.newFossilRef.validate(valid => {
-        this.newFossil.birth = this.newFossil.month + '月' + this.newFossil.date + '日'
-        this.newFossil.monthStr = this.newFossil.month + '月'
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addFossil(this.newFossil)
-          .then(res => {
-            this.$message.success(res.message)
-            this.dialogAddVisible = false
-            this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      this.newFossil.birth = this.newFossil.month + '月' + this.newFossil.date + '日'
+      this.newFossil.monthStr = this.newFossil.month + '月'
+      this.commonApi.postForm('fossil', addFossil, this)
     },
     handleEdit(id) {
-      if (this.$refs['newFossilRef']) {
-        this.$refs['newFossilRef'].resetFields()
-      }
-      getFossil(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newFossil = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'fossil', getFossil, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteFossil, this.fetchData)

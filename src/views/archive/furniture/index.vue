@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -291,17 +291,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getFurnitureList(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getFurnitureList, this)
     },
     getOptions() {
       getOption('furnitureChannels', list => {
@@ -321,34 +311,10 @@ export default {
       })
     },
     postFurniture() {
-      this.$refs.newFurnitureRef.validate(valid => {
-        this.$refs.upload.getUploadedList().then(uploads => {
-          this.newFurniture.photoSrc = uploads.map(obj => ({ ...obj }))
-          if (!valid) return this.$message.error('请修改有误的表单项')
-          addFurniture(this.newFurniture)
-            .then(res => {
-              this.$message.success(res.message)
-              this.newFurniture.photoSrc = []
-              this.dialogAddVisible = false
-              // if (!this.newFurniture._id) this.queryInfo.page = 1
-              this.fetchData()
-            })
-            .catch(err => this.$message.error(err.message))
-        })
-      })
+      this.commonApi.postUploadForm('furniture', addFurniture, this)
     },
     handleEdit(id) {
-      if (this.$refs['newFurnitureRef']) {
-        this.$refs['newFurnitureRef'].resetFields()
-      }
-      getFurniture(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newFurniture = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'furniture', getFurniture, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteFurniture, this.fetchData)

@@ -18,9 +18,9 @@
       </el-col>
     </el-row>
     <el-table
-      v-loading="loading"
+      v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -120,7 +120,7 @@ export default {
   data() {
     return {
       list: null,
-      loading: true,
+      listLoading: true,
       queryInfo: {
         query: '',
         page: 1, // 当前的页数
@@ -156,45 +156,13 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.loading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getBanners(this.queryInfo)
-        .then(res => {
-          this.list = res.data.list
-          this.total = res.data.total
-          this.loading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getBanners, this)
     },
     postBanner() {
-      // 新增用户
-      this.$refs.newBannerRef.validate(valid => {
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addBanner(this.newBanner)
-          .then(res => {
-            this.$message.success(res.message)
-            this.dialogAddVisible = false
-            this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      this.commonApi.postForm('banner', addBanner, this)
     },
     handleEdit(id) {
-      if (this.$refs['newBannerRef']) {
-        this.$refs['newBannerRef'].resetFields()
-      }
-      // 查询并编辑用户信息
-      getBanner(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newBanner = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'banner', getBanner, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteBanner, this.fetchData)

@@ -58,7 +58,7 @@ export const uploadMultiSuccess = (files) => {
 
 export const filterChange = (filters, target) => {
   Object.assign(target.queryInfo, filters)
-  target.fetchData('new')
+  target.fetchData('refresh')
 }
 
 export const sortChange = (sortInfo, target) => {
@@ -67,7 +67,7 @@ export const sortChange = (sortInfo, target) => {
   target.queryInfo.sortJson = {}
   target.queryInfo.sortJson[sortInfo.prop] = order
   target.queryInfo.sort = JSON.stringify(target.queryInfo.sortJson)
-  target.fetchData('new')
+  target.fetchData('refresh')
 }
 
 // 监听多选并给多选数组赋值
@@ -111,3 +111,64 @@ export const dialogAddClose = (name, target) => {
   delete target[`new${firstToUpper(name)}`].__v
 }
 
+// 请求信息并打开编辑弹窗
+export const openEditForm = (id, name, getInfoFun, target) => {
+  if (target.$refs[`new${firstToUpper(name)}Ref`]) {
+    target.$refs[`new${firstToUpper(name)}Ref`].resetFields()
+  }
+  getInfoFun(id)
+    .then(res => {
+      target.dialogAddVisible = true
+      target.$nextTick(function () {
+        target[`new${firstToUpper(name)}`] = res.data
+      })
+    })
+    .catch(err => Message.error(err.message))
+}
+
+// 请求分页列表数据
+export const getList = (refresh, getListFun, target) => {
+  target.listLoading = true
+  if (refresh === 'refresh') {
+    target.queryInfo.page = 1
+  }
+  getListFun(target.queryInfo).then(response => {
+    target.list = response.data.list
+    target.total = response.data.total || 0
+    target.listLoading = false
+  })
+}
+
+// 提交表单
+export const postForm = (name, postFun, target) => {
+  target.$refs[`new${firstToUpper(name)}Ref`].validate(valid => {
+    if (!valid) return Message.error('请修改有误的表单项')
+    postFun(target[`new${firstToUpper(name)}`])
+      .then(res => {
+        Message.success(res.message)
+        target.dialogAddVisible = false
+        if(!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
+        target.fetchData()
+      })
+      .catch(err => Message.error(err.message))
+  })
+}
+
+// 含图片上传的表单提交
+export const postUploadForm = (name, postFun, target) => {
+  target.$refs[`new${firstToUpper(name)}Ref`].validate(valid => {
+    target.$refs.upload.getUploadedList().then(uploads => {
+      target[`new${firstToUpper(name)}`].photoSrc = uploads.map(obj => ({ ...obj }))
+      if (!valid) return Message.error('请修改有误的表单项')
+      postFun(target[`new${firstToUpper(name)}`])
+        .then(res => {
+          Message.success(res.message)
+          target.dialogAddVisible = false
+          target[`new${firstToUpper(name)}`].photoSrc = []
+          if(!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
+          target.fetchData()
+        })
+        .catch(err => Message.error(err.message))
+    })
+  })
+}

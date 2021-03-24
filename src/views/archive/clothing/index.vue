@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -294,17 +294,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getClothingList(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getClothingList, this)
     },
     getOptions() {
       getOption('clothingType', list => {
@@ -330,36 +320,10 @@ export default {
       })
     },
     postClothing() {
-      this.$refs.newClothingRef.validate(valid => {
-        this.$refs.upload.getUploadedList().then(uploads => {
-          this.newClothing.photoSrc = uploads.map(obj => ({ ...obj }))
-          if (!valid) return this.$message.error('请修改有误的表单项')
-          addClothing(this.newClothing)
-            .then(res => {
-              this.$message.success(res.message)
-              this.dialogAddVisible = false
-              if (!this.newClothing._id) {
-                this.fetchData('new')
-              } else {
-                this.fetchData()
-              }
-            })
-            .catch(err => this.$message.error(err.message))
-        })
-      })
+      this.commonApi.postUploadForm('clothing', addClothing, this)
     },
     handleEdit(id) {
-      if (this.$refs['newClothingRef']) {
-        this.$refs['newClothingRef'].resetFields()
-      }
-      getClothing(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newClothing = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'clothing', getClothing, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteClothing, this.fetchData)

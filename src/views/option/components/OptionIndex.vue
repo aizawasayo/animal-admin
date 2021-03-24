@@ -102,14 +102,8 @@ export default {
       //})
     },
     handleEdit(arg) {
-      let id = arg[0]
       let type = arg[1]
-      getOption(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.newOption = res.data
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(arg[0], 'option', getOption, this)
     },
     handelMultipleDelete() {
       this.$refs.optionList[this.tabIndex].handelMultipleDelete()

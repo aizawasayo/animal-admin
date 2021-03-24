@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -238,17 +238,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getTools(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getTools, this)
     },
     getOptions() {
       getOption('toolChannels', list => {
@@ -259,30 +249,10 @@ export default {
       })
     },
     postTool() {
-      this.$refs.newToolRef.validate(valid => {
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addTool(this.newTool)
-          .then(res => {
-            this.$message.success(res.message)
-            this.dialogAddVisible = false
-            // if (!this.newTool._id) this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      this.commonApi.postForm('tool', addTool, this)
     },
     handleEdit(id) {
-      if (this.$refs['newToolRef']) {
-        this.$refs['newToolRef'].resetFields()
-      }
-      getTool(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newTool = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'tool', getTool, this)
     },
     changeDIY(val) {
       if (val) {

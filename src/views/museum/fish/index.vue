@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -21,7 +21,7 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
+        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('refresh')">
           <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
         </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
@@ -30,7 +30,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -337,17 +337,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getFishes(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getFishes, this)
     },
     getOptions() {
       getOption('fishLocale', list => {
@@ -390,34 +380,25 @@ export default {
       this.oldOptions[prop][1] = this.newFish.activeTime[prop]
     },
     postFish() {
-      this.$refs.newFishRef.validate(valid => {
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        const startPeriod =
-          this.newFish.periodStart.indexOf('0') === 0 ? this.newFish.periodStart.substring(1, 2) : this.newFish.periodStart.substring(0, 2)
-        const endPeriod = this.newFish.periodEnd.indexOf('0') === 0 ? this.newFish.periodEnd.substring(1, 2) : this.newFish.periodEnd.substring(0, 2)
-        this.newFish.period = startPeriod + '点-' + endPeriod + '点'
-        addFish(this.newFish)
-          .then(res => {
-            this.$message.success(res.message)
-            if (!this.newFish._id) this.queryInfo.page = 1
-            this.dialogAddVisible = false
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      const startPeriod =
+        this.newFish.periodStart.indexOf('0') === 0 ? this.newFish.periodStart.substring(1, 2) : this.newFish.periodStart.substring(0, 2)
+      const endPeriod = this.newFish.periodEnd.indexOf('0') === 0 ? this.newFish.periodEnd.substring(1, 2) : this.newFish.periodEnd.substring(0, 2)
+      this.newFish.period = startPeriod + '点-' + endPeriod + '点'
+      this.commonApi.postForm('fish', addFish, this)
     },
     handleEdit(id) {
-      if (this.$refs['newFishRef']) {
-        this.$refs['newFishRef'].resetFields()
-      }
-      getFish(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newFish = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'fish', getFish, this)
+      // if (this.$refs['newFishRef']) {
+      //   this.$refs['newFishRef'].resetFields()
+      // }
+      // getFish(id)
+      //   .then(res => {
+      //     this.dialogAddVisible = true
+      //     this.$nextTick(function () {
+      //       this.newFish = res.data
+      //     })
+      //   })
+      //   .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteFish, this.fetchData)

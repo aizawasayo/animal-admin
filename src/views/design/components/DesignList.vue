@@ -3,7 +3,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -89,20 +89,10 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
       if (this.roles.length === 1 && this.roles.includes('normal')) {
         this.queryInfo.user = this.userId
       }
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getDesignList(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getDesignList, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteDesign, this.fetchData)

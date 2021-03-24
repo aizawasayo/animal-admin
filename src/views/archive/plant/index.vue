@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -281,26 +281,14 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getPlants(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getPlants, this)
     },
     getPlantList(query, type) {
       if (!query.trim()) return
       if (type === 'mix') {
         searchMaterial(query)
           .then(response => {
-            console.log(response)
             if (response.data.length === 0) return
-            console.log(1111)
             let listname = type + 'List'
             this[listname] = response.data.map(v => {
               return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
@@ -330,17 +318,7 @@ export default {
     },
     postPlant() {
       this.newPlant.growStage = this.newPlant.growStage.filter(m => m.name !== '')
-      this.$refs.newPlantRef.validate(valid => {
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addPlant(this.newPlant)
-          .then(res => {
-            this.$message.success(res.message)
-            this.dialogAddVisible = false
-            this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      this.commonApi.postForm('plant', addPlant, this)
     },
     handleEdit(id) {
       if (this.$refs['newPlantRef']) {

@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -23,7 +23,7 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
+        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('refresh')">
           <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
         </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
@@ -32,7 +32,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -141,15 +141,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getGuides(this.queryInfo).then(response => {
-        this.list = response.data.list
-        this.total = response.data.total
-        this.listLoading = false
-      })
+      this.commonApi.getList(param, getGuides, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteGuide, this.fetchData)
@@ -164,7 +156,7 @@ export default {
           this.$message.success('修改评论状态成功')
           this.fetchData()
         })
-        .catch(err => this.$message.error(err.message)
+        .catch(err => this.$message.error(err.message))
     }
   }
 }

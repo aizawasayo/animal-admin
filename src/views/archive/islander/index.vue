@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')" />
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')" />
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -21,7 +21,7 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
+        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('refresh')">
           <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
         </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
@@ -30,7 +30,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -366,17 +366,7 @@ export default {
   computed: {},
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getIslanders(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getIslanders, this)
     },
     getOptions() {
       getOption('breed', list => {
@@ -439,20 +429,9 @@ export default {
     //   // }
     // },
     postIslander() {
-      this.$refs.newIslanderRef.validate(valid => {
-        this.newIslander.birth = this.newIslander.month + '月' + this.newIslander.date + '日'
-        this.newIslander.monthStr = this.newIslander.month + '月'
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        addIslander(this.newIslander)
-          .then(res => {
-            this.$message.success(res.message)
-            // this.$refs.upload.clearFiles()
-            this.dialogAddVisible = false
-            // this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      this.newIslander.birth = this.newIslander.month + '月' + this.newIslander.date + '日'
+      this.newIslander.monthStr = this.newIslander.month + '月'
+      this.commonApi.postForm('islander', addIslander, this)
     },
     handleEdit(id) {
       if (this.$refs['newIslanderRef']) {

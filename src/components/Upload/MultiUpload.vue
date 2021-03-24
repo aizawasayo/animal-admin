@@ -19,7 +19,7 @@
       <el-button v-if="!drag" slot="trigger" size="small" type="primary">选取文件</el-button>
       <div v-if="drag">
         <i class="el-icon-upload" />
-        <div class="el-upload__text">将单张图片拖到<br />此处，或<em>点击上传</em></div>
+        <div class="el-upload__text">将图片拖到此处，<br />或<em>点击上传</em></div>
       </div>
       <!-- <el-button style="margin-left: 10px;" size="small" type="success" @click="handleUpload">上传到服务器</el-button> -->
       <div slot="tip" class="el-upload__tip">
@@ -75,18 +75,6 @@ export default {
       },
       deep: true
     }
-  },
-  created() {
-    // console.log('created: 实例创建了', this.list, this.fileList)
-  },
-  mounted() {
-    // console.log('mounted: 实例挂载到DOM了', this.list, this.fileList)
-  },
-  updated() {
-    // console.log('updated: 实例虚拟DOM更新了', this.list, this.fileList)
-  },
-  destroyed() {
-    // console.log('destroyed: 实例销毁了', this.list, this.fileList)
   },
   methods: {
     fileListChange(file, fileList) {

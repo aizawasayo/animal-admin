@@ -263,9 +263,9 @@ export default {
       searchUser(query)
         .then(response => {
           if (response.data.length === 0) return
-          let userId = (this.userListOptions = response.data.map(v => {
+          this.userListOptions = response.data.map(v => {
             return { username: v.username, _id: v._id }
-          }))
+          })
         })
         .catch(err => this.$message.error(err.message))
     }

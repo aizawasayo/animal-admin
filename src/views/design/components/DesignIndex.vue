@@ -105,13 +105,7 @@ export default {
       // })
     },
     handleEdit(arg) {
-      const id = arg[0]
-      getDesign(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.newDesign = res.data
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(arg[0], 'design', getDesign, this)
     },
     handelMultipleDelete() {
       this.$refs.designList[this.tabIndex].handelMultipleDelete()

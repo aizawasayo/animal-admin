@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -357,17 +357,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getInsects(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getInsects, this)
     },
     getOptions() {
       getOption('insectLocale', list => {
@@ -414,35 +404,15 @@ export default {
       this.oldOptions[prop][1] = this.newInsect.activeTime[prop]
     },
     postInsect() {
-      this.$refs.newInsectRef.validate(valid => {
-        if (!valid) return this.$message.error('请修改有误的表单项')
-        const startPeriod =
-          this.newInsect.periodStart.indexOf('0') === 0 ? this.newInsect.periodStart.substring(1, 2) : this.newInsect.periodStart.substring(0, 2)
-        const endPeriod =
-          this.newInsect.periodEnd.indexOf('0') === 0 ? this.newInsect.periodEnd.substring(1, 2) : this.newInsect.periodEnd.substring(0, 2)
-        this.newInsect.period = startPeriod + '点-' + endPeriod + '点'
-        addInsect(this.newInsect)
-          .then(res => {
-            this.$message.success(res.message)
-            this.dialogAddVisible = false
-            // this.queryInfo.page = 1
-            this.fetchData()
-          })
-          .catch(err => this.$message.error(err.message))
-      })
+      const startPeriod =
+        this.newInsect.periodStart.indexOf('0') === 0 ? this.newInsect.periodStart.substring(1, 2) : this.newInsect.periodStart.substring(0, 2)
+      const endPeriod =
+        this.newInsect.periodEnd.indexOf('0') === 0 ? this.newInsect.periodEnd.substring(1, 2) : this.newInsect.periodEnd.substring(0, 2)
+      this.newInsect.period = startPeriod + '点-' + endPeriod + '点'
+      this.commonApi.postForm('insect', addInsect, this)
     },
     handleEdit(id) {
-      if (this.$refs['newFishRef']) {
-        this.$refs['newFishRef'].resetFields()
-      }
-      getInsect(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newInsect = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'insect', getInsect, this)
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteInsect, this.fetchData)

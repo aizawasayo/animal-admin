@@ -3,7 +3,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -100,7 +100,7 @@ export default {
   methods: {
     fetchData(param) {
       this.listLoading = true
-      if (param === 'new') {
+      if (param === 'refresh') {
         this.queryInfo.page = 1
       }
       getComments(this.type, this.queryInfo)

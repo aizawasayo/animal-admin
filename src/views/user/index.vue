@@ -5,7 +5,7 @@
         <el-row :gutter="24">
           <el-col :span="16">
             <el-input v-model="queryInfo.query" placeholder="请输入用户名关键字" class="input-with-select" clearable @clear="fetchData">
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -14,7 +14,7 @@
         </el-row>
       </el-col>
       <el-col :span="8" class="flex-right">
-        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('new')">
+        <!-- <el-select v-model="queryInfo.breed" clearable placeholder="筛选种族" style="margin-right: 10px" @change="fetchData('refresh')">
           <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
         </el-select> -->
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
@@ -22,8 +22,8 @@
     </el-row>
     <el-table
       v-loading="listLoading"
-      :data="userList"
-      element-loading-text="Loading"
+      :data="list"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -204,7 +204,7 @@ export default {
       }
     }
     return {
-      userList: null,
+      list: null,
       listLoading: true,
       queryInfo: {
         query: '',
@@ -265,15 +265,7 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getUsers(this.queryInfo).then(res => {
-        this.userList = res.data.list
-        this.total = res.data.total
-        this.listLoading = false
-      })
+      this.commonApi.getList(param, getUsers, this)
     },
     openAddUser() {
       this.dialogAddVisible = true
@@ -298,7 +290,6 @@ export default {
             .then(res => {
               this.$message.success(res.message)
               this.dialogAddVisible = false
-              this.queryInfo.page = 1
               this.fetchData()
             })
             .catch(err => {
@@ -340,20 +331,7 @@ export default {
     handleDelete(id, roles) {
       if (roles && roles.includes('admin')) return this.$message.warning('不能删除管理员！')
       // 删除用户方法，可批量
-      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
-        .then(() => {
-          deleteUser(id)
-            .then(res => {
-              this.$message.success(res.message)
-              this.fetchData()
-            })
-            .catch(err => this.$message.error(err.message))
-        })
-        .catch(() => this.$message.info('已取消删除'))
+      this.commonApi.deleteById(id, deleteUser, this.fetchData)
     },
     handelMultipleDelete() {
       // 批量删除岛民

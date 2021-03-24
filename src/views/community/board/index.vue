@@ -10,9 +10,9 @@
               class="input-with-select"
               clearable
               @clear="fetchData"
-              @keyup.enter.native="fetchData('new')"
+              @keyup.enter.native="fetchData('refresh')"
             >
-              <el-button slot="append" icon="el-icon-search" @click="fetchData('new')"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="fetchData('refresh')"></el-button>
             </el-input>
           </el-col>
           <el-col :span="8">
@@ -27,7 +27,7 @@
     <el-table
       v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      element-loading-text="加载中"
       border
       fit
       highlight-current-row
@@ -151,20 +151,10 @@ export default {
   },
   methods: {
     fetchData(param) {
-      this.listLoading = true
       if (this.roles.length === 1 && this.roles.includes('normal')) {
         this.queryInfo.user = this.userId
       }
-      if (param === 'new') {
-        this.queryInfo.page = 1
-      }
-      getBoardList(this.queryInfo)
-        .then(response => {
-          this.list = response.data.list
-          this.total = response.data.total || 0
-          this.listLoading = false
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.getList(param, getBoardList, this)
     },
     getOptions() {
       getOption('topic', list => {
@@ -177,35 +167,12 @@ export default {
         .catch(err => this.$message.error(err.message))
     },
     postBoard() {
-      this.$refs.newBoardRef.validate(valid => {
-        this.addTopicInfo()
-        this.$refs.upload.getUploadedList().then(uploads => {
-          this.newBoard.photoSrc = uploads.map(obj => ({ ...obj }))
-          if (!valid) return this.$message.error('请修改有误的表单项')
-          this.newBoard.user = this.$store.getters.userId
-          addBoard(this.newBoard)
-            .then(res => {
-              this.$message.success(res.message)
-              this.dialogAddVisible = false
-              // if (!this.newBoard._id) this.queryInfo.page = 1
-              this.fetchData()
-            })
-            .catch(err => this.$message.error(err.message))
-        })
-      })
+      this.addTopicInfo()
+      this.newBoard.user = this.$store.getters.userId
+      this.commonApi.postUploadForm('board', addBoard, this)
     },
     handleEdit(id) {
-      if (this.$refs['newBoardRef']) {
-        this.$refs['newBoardRef'].resetFields()
-      }
-      getBoard(id)
-        .then(res => {
-          this.dialogAddVisible = true
-          this.$nextTick(function () {
-            this.newBoard = res.data
-          })
-        })
-        .catch(err => this.$message.error(err.message))
+      this.commonApi.openEditForm(id, 'board', getBoard, this)
     },
     addTopicInfo() {
       let topicName = this.newBoard.topic
