@@ -199,6 +199,7 @@
                   remote
                   value-key="name"
                   placeholder="查询材料"
+                  @focus="clearMaterialList"
                 >
                   <el-option v-for="item1 in materialList" :key="item1.name" :label="item1.name" :value="item1" />
                 </el-select>
@@ -354,46 +355,37 @@ export default {
         this.activityList = list
       })
     },
-    getMaterialList(query) {
+    async getMaterialList(query) {
       if (!query.trim()) return
-      searchMaterial(query)
-        .then(response => {
-          if (response.data.length === 0) return
-          this.materialList = response.data.map(v => {
-            return { name: v.name, _id: v._id, photoSrc: v.photoSrc, num: 1 }
-          })
-          if (this.materialList.length === 0) {
-            searchFurniture(query)
-              .then(res => {
-                if (!res.data.length === 0) return
-                this.materialList = res.data.map(w => {
-                  return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
-                })
-                if (this.materialList.length === 0) {
-                  searchClothing(query)
-                    .then(res1 => {
-                      if (!res1.data.length === 0) return
-                      this.materialList = res.data.map(w => {
-                        return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
-                      })
-                      if (this.materialList.length === 0) {
-                        searchRecipe(query)
-                          .then(res2 => {
-                            if (!res2.data.length === 0) return
-                            this.materialList = res.data.map(w => {
-                              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
-                            })
-                          })
-                          .catch(err => this.$message.error(err.message))
-                      }
-                    })
-                    .catch(err => this.$message.error(err.message))
-                }
-              })
-              .catch(err => this.$message.error(err.message))
+      const resMaterial = await searchMaterial(query)
+      if (resMaterial.data.length === 0) {
+        const resFurniture = await searchFurniture(query)
+        if (resFurniture.data.length === 0) {
+          const resClothing = await searchClothing(query)
+          if (resClothing.data.length === 0) {
+            const resRecipe = await searchRecipe(query)
+            if (resRecipe.data.length === 0) return
+            this.materialList = resRecipe.data.map(w => {
+              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+            })
+          } else {
+            this.materialList = resClothing.data.map(w => {
+              return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+            })
           }
+        } else {
+          this.materialList = resFurniture.data.map(w => {
+            return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
+          })
+        }
+      } else {
+        this.materialList = resMaterial.data.map(w => {
+          return { name: w.name, _id: w._id, photoSrc: w.photoSrc, num: 1 }
         })
-        .catch(err => this.$message.error(err.message))
+      }
+    },
+    clearMaterialList() {
+      this.materialList = []
     },
     addMaterials() {
       this.newRecipe.materials.push({ photoSrc: '', num: 1, name: '' })
