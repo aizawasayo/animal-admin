@@ -99,7 +99,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="图片" prop="avatar">
-              <upload-single v-model="newBanner.avatar" dialogWidth="60%" drag />
+              <upload-single v-model="newBanner.avatar" dialog-width="60%" drag />
             </el-form-item>
           </el-col>
         </el-row>
@@ -123,8 +123,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },

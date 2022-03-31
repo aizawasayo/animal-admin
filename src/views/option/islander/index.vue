@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -13,11 +13,9 @@ export default {
       tabOptions: [
         { label: '动物种族', key: 'breed' },
         { label: '岛民性格', key: 'character' },
-        // { label: '性格亚型', key: 'subtype' },
         { label: '岛民音高', key: 'voice' },
         { label: '岛民爱好', key: 'hobby' }
       ],
-      //tabIndex:0,
       activeName: 'breed'
     }
   },

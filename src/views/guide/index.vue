@@ -72,7 +72,7 @@
       </el-table-column>
       <el-table-column width="120px" align="center" label="评论开放状态" column-key="comment_disabled" :filters="commentList">
         <template slot-scope="scope">
-          <el-switch v-model="!scope.row.comment_disabled" @change="state => commentHandler(state, scope.row._id)"></el-switch>
+          <el-switch :value="!scope.row.comment_disabled" />
         </template>
       </el-table-column>
       <el-table-column width="120px" align="center" label="作者">
@@ -94,7 +94,7 @@
 </template>
 
 <script>
-import { getGuides, addGuide, getGuide, deleteGuide } from '@/api/guide'
+import { getGuides, deleteGuide } from '@/api/guide'
 
 export default {
   name: 'Guide',
@@ -114,8 +114,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -149,15 +149,7 @@ export default {
     handelMultipleDelete() {
       this.commonApi.multipleDelete(this.multipleSelection, deleteGuide, this.fetchData)
     },
-    commentHandler(state, id) {
-      //修改评论开放与否
-      addGuide({ _id: id, comment_disabled: state })
-        .then(res => {
-          this.$message.success('修改评论状态成功')
-          this.fetchData()
-        })
-        .catch(err => this.$message.error(err.message))
-    }
+    commentHandler(state, id) {}
   }
 }
 </script>

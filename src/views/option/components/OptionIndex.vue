@@ -24,10 +24,10 @@
         <el-button type="danger" plain @click="handelMultipleDelete">批量删除</el-button>
       </el-col>
     </el-row>
-    <el-tabs v-model="activeName" style="margin-top: 15px;" type="card">
-      <el-tab-pane v-for="(item, i) in tabOptions" :key="item.key" :label="item.label" :name="item.key">
+    <el-tabs v-model="activeName" style="margin-top: 15px" type="card">
+      <el-tab-pane v-for="item in tabOptions" :key="item.key" :label="item.label" :name="item.key">
         <keep-alive>
-          <option-list ref="optionList" :type="item.key" :queryKey="queryKey" @paneEdit="handleEdit(arguments)" />
+          <option-list ref="optionList" :type="item.key" :query-key="queryKey" @paneEdit="handleEdit(arguments)" />
         </keep-alive>
       </el-tab-pane>
     </el-tabs>
@@ -87,9 +87,7 @@ export default {
   methods: {
     openAddOption() {
       this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      // this.$nextTick(function () {
-      let type = this.tabOptions[this.tabIndex].key
+      const type = this.tabOptions[this.tabIndex].key
       this.newOption = {
         name: '',
         type: type,
@@ -99,10 +97,8 @@ export default {
         icon: '',
         color: ''
       }
-      //})
     },
     handleEdit(arg) {
-      let type = arg[1]
       this.commonApi.openEditForm(arg[0], 'option', getOption, this)
     },
     handelMultipleDelete() {
@@ -110,7 +106,6 @@ export default {
     },
     fetchOptionData() {
       this.$refs.optionList.forEach(item => item.fetchData())
-      // this.$refs.optionList[this.tabIndex].fetchData()
     },
     hideDialog() {
       this.dialogAddVisible = false

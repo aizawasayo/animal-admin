@@ -154,8 +154,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -189,7 +189,7 @@ export default {
   },
   computed: {
     isSale() {
-      let isSaleBl = this.newRecord.orderType === '订购'
+      const isSaleBl = this.newRecord.orderType === '订购'
       return isSaleBl
     }
   },

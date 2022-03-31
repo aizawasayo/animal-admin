@@ -8,16 +8,11 @@
 </template>
 
 <script>
-/**
- * docs:
- * https://panjiachen.github.io/vue-element-admin-site/feature/component/rich-editor.html#tinymce
- */
 import editorImage from './components/EditorImage'
 import plugins from './plugins'
 import toolbar from './toolbar'
 import load from './dynamicLoadScript'
 
-// why use this cdn, detail see https://github.com/PanJiaChen/tinymce-all-in-one
 const tinymceCDN = 'https://cdn.jsdelivr.net/npm/tinymce-all-in-one@4.9.3/tinymce.min.js'
 
 export default {
@@ -74,7 +69,6 @@ export default {
     containerWidth() {
       const width = this.width
       if (/^[\d]+(\.[\d]+)?$/.test(width)) {
-        // matches `100`, `'100'`
         return `${width}px`
       }
       return width
@@ -103,7 +97,6 @@ export default {
   },
   methods: {
     init() {
-      // dynamic load tinymce from cdn
       load(tinymceCDN, err => {
         if (err) {
           this.$message.error(err.message)
@@ -124,34 +117,30 @@ export default {
         menubar: this.menubar,
         plugins: plugins,
         fontsize_formats: '8pt 10pt 12pt 14pt 18pt 24pt 36pt',
-        // images_upload_url: process.env.VUE_APP_BASE_API + '/admin/upload',
-        // images_upload_base_path: process.env.VUE_APP_BASE_API,
         images_upload_handler: function (blobInfo, succFun, failFun) {
-          // toolbar图片上传处理，此处是单文件上传通道，多文件尚未研究
           var xhr, formData
-          var file = blobInfo.blob() //转化为易于理解的file对象
+          var file = blobInfo.blob()
           xhr = new XMLHttpRequest()
           xhr.withCredentials = false
           xhr.open('POST', process.env.VUE_APP_BASE_API + '/admin/single/upload')
           xhr.onload = function () {
             var json
-            if (xhr.status != 200) {
+            if (xhr.status !== 200) {
               failFun('HTTP Error: ' + xhr.status)
               return
             }
             json = JSON.parse(xhr.responseText)
-            if (!json || typeof json.data.url != 'string') {
+            if (!json || typeof json.data.url !== 'string') {
               failFun('Invalid JSON: ' + xhr.responseText)
               return
             }
             let fileSrc = json.data.path
             fileSrc = fileSrc.replace('/public', '')
             fileSrc = process.env.VUE_APP_REAL_API + fileSrc
-            // fileSrc = `http://192.168.31.168:1016${fileSrc}`
             succFun(fileSrc)
           }
           formData = new FormData()
-          formData.append('avatar', file, file.name) //此处与源文档不一样
+          formData.append('avatar', file, file.name)
           xhr.send(formData)
         },
         end_container_on_empty_block: true,
@@ -164,7 +153,7 @@ export default {
         default_link_target: '_blank',
         link_title: false,
         statusbar: false,
-        nonbreaking_force_tab: true, // inserting nonbreaking space &nbsp; need Nonbreaking Space Plugin
+        nonbreaking_force_tab: true,
         init_instance_callback: editor => {
           if (_this.value) {
             editor.setContent(_this.value)
@@ -180,43 +169,7 @@ export default {
             _this.fullscreen = e.state
           })
         },
-        //it will try to keep these URLs intact
-        //https://www.tiny.cloud/docs-3x/reference/configuration/Configuration3x@convert_urls/
-        //https://stackoverflow.com/questions/5196205/disable-tinymce-absolute-to-relative-url-conversions
         convert_urls: false
-        // 整合七牛上传
-        // images_dataimg_filter(img) {
-        //   setTimeout(() => {
-        //     const $image = $(img);
-        //     $image.removeAttr('width');
-        //     $image.removeAttr('height');
-        //     if ($image[0].height && $image[0].width) {
-        //       $image.attr('data-wscntype', 'image');
-        //       $image.attr('data-wscnh', $image[0].height);
-        //       $image.attr('data-wscnw', $image[0].width);
-        //       $image.addClass('wscnph');
-        //     }
-        //   }, 0);
-        //   return img
-        // },
-        // images_upload_handler(blobInfo, success, failure, progress) {
-        //   progress(0);
-        //   const token = _this.$store.getters.token;
-        //   getToken(token).then(response => {
-        //     const url = response.data.qiniu_url;
-        //     const formData = new FormData();
-        //     formData.append('token', response.data.qiniu_token);
-        //     formData.append('key', response.data.qiniu_key);
-        //     formData.append('file', blobInfo.blob(), url);
-        //     upload(formData).then(() => {
-        //       success(url);
-        //       progress(100);
-        //     })
-        //   }).catch(err => {
-        //     failure('出现未知问题，刷新页面，或者联系程序员')
-        //     console.log(err);
-        //   });
-        // },
       })
     },
     destroyTinymce() {
@@ -250,7 +203,7 @@ export default {
   position: relative;
   line-height: normal;
 }
-.tinymce-container >>> .mce-fullscreen {
+.tinymce-container /deep/ .mce-fullscreen {
   z-index: 10000;
 }
 .tinymce-textarea {

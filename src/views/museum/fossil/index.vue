@@ -112,7 +112,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-single v-model="newFossil.photoSrc" dialogWidth="25%" drag />
+              <upload-single v-model="newFossil.photoSrc" dialog-width="25%" drag />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -141,8 +141,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },

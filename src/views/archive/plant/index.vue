@@ -133,7 +133,7 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="16" v-if="newPlant.channel == '种子'">
+          <el-col v-if="newPlant.channel == '种子'" :span="16">
             <el-form-item label="种子名称" prop="seed">
               <el-select
                 v-model="newPlant.seed"
@@ -149,7 +149,7 @@
             </el-form-item>
           </el-col>
           <!-- <div v-if="newPlant.channel == '花卉杂交'"> -->
-          <el-col :span="8" v-for="(item, i) in newPlant.mixPlant" :key="'mixPlant' + i" v-show="newPlant.channel == '花卉杂交'">
+          <el-col v-show="newPlant.channel == '花卉杂交'" v-for="(item, i) in newPlant.mixPlant" :key="'mixPlant' + i" :span="8">
             <el-form-item :label="'花卉' + (i + 1)" prop="" label-width="80px">
               <el-select
                 v-model="newPlant.mixPlant[i]"
@@ -168,7 +168,7 @@
           <el-col :span="2">
             <el-form-item label="成长阶段" label-width="80px"> </el-form-item>
           </el-col>
-          <el-col :span="7" v-for="(item, i) in newPlant.growStage" :key="'growS' + i">
+          <el-col v-for="(item, i) in newPlant.growStage" :key="'growS' + i" :span="7">
             <el-form-item :label="'阶段' + (i + 1)" prop="" label-width="80px">
               <el-select v-model="newPlant.growStage[i]">
                 <el-option v-for="item1 in growList[i]" :key="item1" :label="item1" :value="item1" />
@@ -177,7 +177,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-single v-model="newPlant.photoSrc" dialogWidth="30%" drag />
+              <upload-single v-model="newPlant.photoSrc" dialog-width="30%" drag />
             </el-form-item>
           </el-col>
         </el-row>
@@ -201,8 +201,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -266,15 +266,9 @@ export default {
   },
   computed: {
     notSeed() {
-      //如果是种子类型隐藏部分选项
-      let isSeed = this.newPlant.type.includes('种子') || this.newPlant.type.includes('树苗')
+      const isSeed = this.newPlant.type.includes('种子') || this.newPlant.type.includes('树苗')
       return !isSeed
     }
-    // myObj: {
-    //   get: function () {
-    //     return this.myTempObj // 在这里把临时对象的值通过计算属性赋值给页面中用到的对象
-    //   }
-    // }
   },
   created() {
     this.fetchData()
@@ -289,7 +283,7 @@ export default {
         searchMaterial(query)
           .then(response => {
             if (response.data.length === 0) return
-            let listname = type + 'List'
+            const listname = type + 'List'
             this[listname] = response.data.map(v => {
               return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
             })
@@ -299,7 +293,7 @@ export default {
         searchPlant(query)
           .then(response => {
             if (response.data.length === 0) return
-            let listname = type + 'List'
+            const listname = type + 'List'
             this[listname] = response.data.map(v => {
               return { name: v.name, _id: v._id, photoSrc: v.photoSrc }
             })
@@ -314,7 +308,6 @@ export default {
       this.seedList = []
       this.mixList = []
       this.growStage = ['', '', '', '', '']
-      //this.plantList = []
     },
     postPlant() {
       this.newPlant.growStage = this.newPlant.growStage.filter(m => m.name !== '')

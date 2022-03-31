@@ -63,10 +63,12 @@ export default {
   name: 'CommentList',
   props: {
     type: {
-      type: String
+      type: String,
+      default: ''
     },
     queryKey: {
-      type: String
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -75,8 +77,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: this.queryKey,
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: { created_time: 1 },
         sort: ''
       },
@@ -87,7 +89,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId']) // 推荐这种
+    ...mapGetters(['userId'])
   },
   watch: {
     queryKey(newVal) {

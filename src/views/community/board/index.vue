@@ -84,7 +84,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-multi ref="upload" drag :list="newBoard.photoSrc" dialogWidth="50%" />
+              <upload-multi ref="upload" drag :list="newBoard.photoSrc" dialog-width="50%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -117,8 +117,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -129,8 +129,8 @@ export default {
       topicOption: [],
       newBoard: {
         user: '',
-        topic: '', // 话题
-        content: '', // 详细内容
+        topic: '',
+        content: '',
         photoSrc: [],
         icon: '',
         color: ''
@@ -143,7 +143,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId', 'roles']) //推荐这种
+    ...mapGetters(['userId', 'roles'])
   },
   created() {
     this.fetchData()
@@ -175,8 +175,8 @@ export default {
       this.commonApi.openEditForm(id, 'board', getBoard, this)
     },
     addTopicInfo() {
-      let topicName = this.newBoard.topic
-      let topicInfo = this.topicOption.filter(item => item.name === topicName)
+      const topicName = this.newBoard.topic
+      const topicInfo = this.topicOption.filter(item => item.name === topicName)
       this.newBoard.icon = topicInfo[0].icon
       this.newBoard.color = topicInfo[0].color
     },

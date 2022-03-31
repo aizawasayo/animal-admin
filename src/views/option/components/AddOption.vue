@@ -19,24 +19,24 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8" v-show="isActivity">
+        <el-col v-show="isActivity" :span="8">
           <el-form-item label="位置" prop="position">
             <el-select v-model="newOption.position" multiple collapse-tags placeholder="请选择所属半球">
               <el-option v-for="(item, i) in positionList" :key="item.key + i" :label="item.label" :value="item.key"> </el-option>
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8" v-show="isActivity">
+        <el-col v-show="isActivity" :span="8">
           <el-form-item label="存在时期" prop="duration">
             <el-input v-model="newOption.duration" />
           </el-form-item>
         </el-col>
-        <el-col :span="8" v-show="isTopic">
+        <el-col v-show="isTopic" :span="8">
           <el-form-item label="图标" prop="icon">
             <el-input v-model="newOption.icon" />
           </el-form-item>
         </el-col>
-        <el-col :span="8" v-show="isTopic">
+        <el-col v-show="isTopic" :span="8">
           <el-form-item label="颜色" prop="color">
             <el-input v-model="newOption.color" />
           </el-form-item>
@@ -76,7 +76,8 @@ export default {
       }
     },
     tabList: {
-      type: Array
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -113,7 +114,6 @@ export default {
   },
   watch: {
     option: {
-      //immediate: true,
       handler(val) {
         if (val.name) {
           this.newOption = val
@@ -133,18 +133,10 @@ export default {
       }
     }
   },
-  created() {
-    //console.log('created', this.newOption)
-  },
-  beforeMount() {
-    //console.log('beforeMount', this.newOption)
-  },
-  mounted() {
-    //console.log('mounted', this.newOption)
-  },
-  beforeUpdate() {
-    //console.log('beforeUpdate', this.newOption)
-  },
+  created() {},
+  beforeMount() {},
+  mounted() {},
+  beforeUpdate() {},
   methods: {
     dialogAddClose() {
       this.$refs['newOptionRef'].resetFields()

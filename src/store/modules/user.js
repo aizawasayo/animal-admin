@@ -58,22 +58,14 @@ const actions = {
       password
     } = userInfo
     return new Promise((resolve, reject) => {
-      login({
-          username: username.trim(),
-          password: password
-        })
+      login({ username: username.trim(), password: password })
         .then(response => {
-          const {
-            data
-          } = response
+          const { data } = response
 
           if (!data) {
             reject('认证失败，请重新登陆')
           }
-          const {
-            user,
-            token,
-          } = data
+          const { user, token } = data
           commit('SET_TOKEN', token)
           commit('SET_ID', user._id)
           setToken(token)
@@ -87,26 +79,17 @@ const actions = {
   },
 
   // get user info
-  getInfo({
-    commit,
-    state
-  }) {
+  getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      let id = getUserId()
+      const id = getUserId()
       getUser(id).then(response => {
-        const {
-          data
-        } = response
+        const { data } = response
 
         if (!data) {
           reject('认证失败，请重新登陆')
         }
 
-        const {
-          roles,
-          username,
-          avatar
-        } = data
+        const { roles, username, avatar } = data
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {

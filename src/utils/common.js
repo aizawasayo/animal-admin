@@ -1,7 +1,4 @@
-import {
-  Message,
-  MessageBox,
-} from 'element-ui'
+import { Message, MessageBox } from 'element-ui'
 
 /**
  * 删除数据
@@ -39,15 +36,15 @@ export const multipleDelete = (multiData, deleteFun, callback) => {
   deleteById(id, deleteFun, callback)
 }
 
-export const uploadSuccess = (res) => {
+export const uploadSuccess = res => {
   Message({ type: 'success', message: res.message || '上传成功' })
   const src = res.data.path
   return src.replace('/public', '')
 }
 
-export const uploadMultiSuccess = (files) => {
+export const uploadMultiSuccess = files => {
   // Message({ type: 'success', message: res.message || '上传成功' })
-  let photoList = []
+  const photoList = []
   files.forEach((pic, i) => {
     const src = pic.path.replace('/public', '')
     const uid = Date.parse(new Date()) / 1000 + i
@@ -71,7 +68,7 @@ export const sortChange = (sortInfo, target) => {
 }
 
 // 监听多选并给多选数组赋值
-export const handleSelectionChange = (selection, target) => { 
+export const handleSelectionChange = (selection, target) => {
   target.multipleSelection = 	selection
 }
 
@@ -81,7 +78,7 @@ export const handleSelectionChange = (selection, target) => {
  * @str {string}
 */
 function firstToUpper(str) {
-  return str.trim().toLowerCase().replace(str[0], str[0].toUpperCase());
+  return str.trim().toLowerCase().replace(str[0], str[0].toUpperCase())
 }
 
 // 对象数组去重
@@ -147,7 +144,7 @@ export const postForm = (name, postFun, target) => {
       .then(res => {
         Message.success(res.message)
         target.dialogAddVisible = false
-        if(!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
+        if (!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
         target.fetchData()
       })
       .catch(err => Message.error(err.message))
@@ -165,7 +162,7 @@ export const postUploadForm = (name, postFun, target) => {
           Message.success(res.message)
           target.dialogAddVisible = false
           target[`new${firstToUpper(name)}`].photoSrc = []
-          if(!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
+          if (!target[`new${firstToUpper(name)}`]._id) target.queryInfo.page = 1
           target.fetchData()
         })
         .catch(err => Message.error(err.message))

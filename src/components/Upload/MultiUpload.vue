@@ -40,7 +40,7 @@ export default {
   props: {
     list: {
       type: Array,
-      default: []
+      default: () => []
     },
     drag: {
       type: Boolean,
@@ -54,7 +54,7 @@ export default {
   data() {
     return {
       value: '',
-      fileList: [], // 由于不是简单数据，不能直接用props.list值作为初始值
+      fileList: [],
       dialogVisible: false
     }
   },
@@ -69,8 +69,6 @@ export default {
   watch: {
     list: {
       handler(newVal) {
-        // 深拷贝，项目里推荐lodash
-        // this.fileList = _.cloneDeep(this.list)
         this.fileList = this.list.map(obj => ({ ...obj }))
       },
       deep: true
@@ -78,29 +76,22 @@ export default {
   },
   methods: {
     fileListChange(file, fileList) {
-      // 添加文件、上传成功和上传失败时都会被调用
       const typeList = ['image/jpeg', 'image/png', 'image/gif']
       const isTypeValid = typeList.includes(file.raw.type)
       const isLt2M = file.size / 1024 / 1024 < 2
       if (!isTypeValid) return this.$message.error('图片格式只能是 JPG/PNG/GIF!')
       if (!isLt2M) return this.$message.error('图片大小不能超过 2MB!')
-      this.fileList.push(file) // 能响应式更改数组
-      // this.$set(this.fileList, this.fileList.length, file) // 能响应式更改数组
+      this.fileList.push(file)
     },
     filterFileList(uploaded) {
-      // 传 uploaded 筛选已上传的图片列表，不传筛选未上传的
-      return uploaded ? this.fileList.filter(item => !item.hasOwnProperty('raw')) : this.fileList.filter(item => item.hasOwnProperty('raw'))
+      return uploaded
+        ? this.fileList.filter(item => !Object.prototype.hasOwnProperty.call(item, 'raw'))
+        : this.fileList.filter(item => Object.prototype.hasOwnProperty.call(item, 'raw'))
     },
     async getUploadedList() {
-      /* 逻辑梳理：
-       1. 点击父组件表单提交按钮触发，这时说明组件已无其他数据操作
-       2. 父组件需要的数据是fileList中所有不含raw字段的数据，不含的只有list传过来的新成功上传后经过处理的两种可嫩
-       3. 首先判断有没有含有raw的，如果没有，直接return fileList, 因为fileList的值就等于传过来的list
-       4. 如果有去批量上传，请求的返回值追加到this.list中，再返给父组件
-      */
       const toUploadList = this.filterFileList()
-      if (toUploadList.length == 0) return this.fileList
-      let formData = new FormData()
+      if (toUploadList.length === 0) return this.fileList
+      const formData = new FormData()
       toUploadList.forEach(file => formData.append('photoSrc', file.raw, file.name))
       const { data } = await uploadMult(formData)
       return this.filterFileList(true).concat(this.commonApi.uploadMultiSuccess(data))
@@ -144,12 +135,15 @@ export default {
       line-height: 20px;
     }
   }
-  .image-uploader >>> .el-upload-list__item:first-child {
-    margin-top: 0px;
+  .image-uploader /deep/ .el-upload {
+    width: 150px;
   }
-  .image-uploader >>> .el-upload-dragger {
+  .image-uploader /deep/ .el-upload-dragger {
     width: 150px;
     height: 150px;
+  }
+  .image-uploader /deep/ .el-upload-list__item:first-child {
+    margin-top: 0px;
   }
 }
 </style>

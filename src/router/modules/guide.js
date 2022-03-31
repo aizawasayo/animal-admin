@@ -6,7 +6,8 @@ const guideRouter = {
   path: '/guide',
   component: Layout,
   redirect: '/guide/index',
-  children: [{
+  children: [
+    {
       path: 'index',
       component: () => import('@/views/guide'),
       name: 'Guide',
@@ -14,7 +15,7 @@ const guideRouter = {
         title: '攻略管理',
         icon: 'guide',
         roles: ['admin']
-      },
+      }
     },
     {
       path: 'add',
@@ -40,7 +41,7 @@ const guideRouter = {
         roles: ['admin']
       },
       hidden: true
-    },
+    }
   ]
 }
 export default guideRouter

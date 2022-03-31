@@ -25,10 +25,10 @@
       </el-col>
     </el-row>
     <el-tabs v-model="activeName" style="margin-top: 15px;" type="card">
-      <el-tab-pane v-for="(item, i) in tabOptions" :key="item.key" :label="item.label" :name="item.key">
+      <el-tab-pane v-for="item in tabOptions" :key="item.key" :label="item.label" :name="item.key">
         <span slot="label"> <svg-icon :icon-class="item.icon" /> {{ item.label }} </span>
         <keep-alive>
-          <design-list ref="designList" :type="item.key" :queryKey="queryKey" @paneEdit="handleEdit(arguments)" />
+          <design-list ref="designList" :type="item.key" :query-key="queryKey" @paneEdit="handleEdit(arguments)" />
         </keep-alive>
       </el-tab-pane>
     </el-tabs>
@@ -68,10 +68,6 @@ export default {
     }
   },
   computed: {
-    // 获取app模块的uploadUrl的三种方式
-    // ...mapState(['app']), //使用是app.uploadUrl
-    // ...mapState('app', { uploadUrl: state => state.uploadUrl }),
-    // ...mapGetters(['uploadUrl']), //推荐这种
     tabIndex() {
       return this.tabOptions.findIndex(item => item.key === this.activeName)
     }
@@ -80,9 +76,7 @@ export default {
     activeName(val) {
       this.$router.push(`${this.$route.path}?tab=${val}`)
     },
-    newDesign() {
-      // ++this.addKey
-    }
+    newDesign() {}
   },
   created() {
     const tab = this.$route.query.tab
@@ -93,8 +87,6 @@ export default {
   methods: {
     openAddDesign() {
       this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-      // this.$nextTick(function () {
       const type = this.tabOptions[this.tabIndex].key
       this.newDesign = {
         name: '',
@@ -102,7 +94,6 @@ export default {
         photoSrc: [],
         content: ''
       }
-      // })
     },
     handleEdit(arg) {
       this.commonApi.openEditForm(arg[0], 'design', getDesign, this)

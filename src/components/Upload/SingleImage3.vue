@@ -60,7 +60,7 @@ export default {
       this.$emit('input', val)
     },
     handleImageSuccess(response) {
-      let fileSrc = response.data.path
+      const fileSrc = response.data.path
       this.emitInput(fileSrc.replace('/public', ''))
     },
     beforeUpload() {}
@@ -81,7 +81,7 @@ export default {
     width: 35%;
     float: left;
   }
-  .image-uploader >>> .el-upload {
+  .image-uploader /deep/ .el-upload {
     width: 100%;
   }
   .image-preview {

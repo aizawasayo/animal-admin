@@ -12,7 +12,8 @@ const optionRouter = {
     icon: 'setting',
     roles: ['admin']
   },
-  children: [{
+  children: [
+    {
       path: 'general',
       component: () => import('@/views/option/general'),
       name: 'GeneralSetting',
@@ -20,7 +21,7 @@ const optionRouter = {
         title: '通用配置',
         icon: 'table',
         roles: ['admin']
-      },
+      }
     },
     {
       path: 'islander',
@@ -30,7 +31,7 @@ const optionRouter = {
         title: '岛民配置',
         icon: 'people',
         roles: ['admin']
-      },
+      }
     },
     {
       path: 'furniture',
@@ -40,7 +41,7 @@ const optionRouter = {
         title: '家具配置',
         icon: 'furniture',
         roles: ['admin']
-      },
+      }
     },
     {
       path: 'clothing',
@@ -101,7 +102,7 @@ const optionRouter = {
         icon: 'book',
         roles: ['admin']
       }
-    },
+    }
   ]
 }
 export default optionRouter

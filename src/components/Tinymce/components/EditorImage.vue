@@ -17,16 +17,10 @@
         :action="uploadUrl"
         list-type="picture-card"
       >
-        <el-button size="small" type="primary">
-          点击上传
-        </el-button>
+        <el-button size="small" type="primary"> 点击上传 </el-button>
       </el-upload>
-      <el-button @click="dialogVisible = false">
-        取消
-      </el-button>
-      <el-button type="primary" @click="handleSubmit">
-        确认
-      </el-button>
+      <el-button @click="dialogVisible = false"> 取消 </el-button>
+      <el-button type="primary" @click="handleSubmit"> 确认 </el-button>
     </el-dialog>
   </div>
 </template>
@@ -74,7 +68,6 @@ export default {
       const objKeyArr = Object.keys(this.listObj)
       for (let i = 0, len = objKeyArr.length; i < len; i++) {
         if (this.listObj[objKeyArr[i]].uid === uid) {
-          // this.listObj[objKeyArr[i]].url = 'http://106.54.168.208:1016' + fileSrc
           this.listObj[objKeyArr[i]].url = process.env.VUE_APP_REAL_API + fileSrc
           this.listObj[objKeyArr[i]].hasSuccess = true
           return

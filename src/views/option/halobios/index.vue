@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -15,7 +15,6 @@ export default {
         { label: '海洋生物鱼影大小', key: 'halobiosShadow' },
         { label: '解锁数量要求', key: 'halobiosUnlock' }
       ],
-      //tabIndex:0,
       activeName: 'halobiosLocale'
     }
   },

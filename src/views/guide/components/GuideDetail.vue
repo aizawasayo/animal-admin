@@ -5,12 +5,8 @@
         <CommentDropdown v-model="postForm.comment_disabled" />
         <PlatformDropdown v-model="postForm.platforms" />
         <SourceUrlDropdown v-model="postForm.source_uri" />
-        <el-button v-loading="loading" style="margin-left: 10px;" type="success" @click="submitForm('published')">
-          发布
-        </el-button>
-        <el-button v-loading="loading" type="warning" @click="submitForm('draft')">
-          存草稿
-        </el-button>
+        <el-button v-loading="loading" style="margin-left: 10px;" type="success" @click="submitForm('published')">发布</el-button>
+        <el-button v-loading="loading" type="warning" @click="submitForm('draft')">存草稿</el-button>
       </sticky>
 
       <div class="createPost-main-container">
@@ -18,9 +14,7 @@
           <!-- <Warning /> -->
           <el-col :span="24">
             <el-form-item style="margin-bottom: 40px;" prop="title">
-              <MDinput v-model="postForm.title" :maxlength="100" name="name" required>
-                标题
-              </MDinput>
+              <MDinput v-model="postForm.title" :maxlength="100" name="name" required>标题</MDinput>
             </el-form-item>
 
             <div class="postInfo-container">
@@ -92,8 +86,7 @@
 import Tinymce from '@/components/Tinymce'
 import Upload from '@/components/Upload/SingleImage3'
 import MDinput from '@/components/MDinput'
-import Sticky from '@/components/Sticky' // 粘性header组件
-import { validURL } from '@/utils/validate'
+import Sticky from '@/components/Sticky'
 import { getGuide, addGuide } from '@/api/guide'
 import { searchUser } from '@/api/user'
 import Warning from './Warning'
@@ -102,17 +95,16 @@ import { timestamp, parseTime } from '@/utils'
 
 const defaultForm = {
   status: 'draft',
-  title: '', // 文章题目
-  content: '', // 文章内容
-  content_short: '', // 文章摘要
-  type: '', //文章分类
-  source_uri: '', // 文章外链
-  image_uri: '', // 文章图片
-  display_time: undefined, // 前台展示时间
+  title: '',
+  content: '',
+  content_short: '',
+  type: '',
+  source_uri: '',
+  image_uri: '',
+  display_time: undefined,
   _id: undefined,
   platforms: [],
   comment_disabled: false,
-  //importance: 0,
   author: { username: '', _id: '' }
 }
 
@@ -134,21 +126,6 @@ export default {
         callback()
       }
     }
-    const validateSourceUri = (rule, value, callback) => {
-      if (value) {
-        if (validURL(value)) {
-          callback()
-        } else {
-          this.$message({
-            message: '外链url填写不正确',
-            type: 'error'
-          })
-          callback(new Error('外链url填写不正确'))
-        }
-      } else {
-        callback()
-      }
-    }
     return {
       postForm: Object.assign({}, defaultForm),
       loading: false,
@@ -160,7 +137,6 @@ export default {
         type: [{ validator: validateRequire }],
         title: [{ validator: validateRequire }],
         content: [{ validator: validateRequire }]
-        // source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
       },
       tempRoute: {}
     }
@@ -170,10 +146,6 @@ export default {
       return this.postForm.content_short.length
     },
     displayTime: {
-      // set and get is useful when the data
-      // returned by the back end api is different from the front end
-      // back end return => "2013-06-25 06:59:25"
-      // front end need timestamp => 1372114765000
       get() {
         return +new Date(this.postForm.display_time)
       },
@@ -188,9 +160,6 @@ export default {
       this.fetchData(id)
     }
 
-    // Why need to make a copy of this.$route here?
-    // Because if you enter this page and quickly switch tag, may be in the execution of the setTagsViewTitle function, this.$route is no longer pointing to the current page
-    // https://github.com/PanJiaChen/vue-element-admin/issues/1221
     this.tempRoute = Object.assign({}, this.$route)
   },
   methods: {
@@ -199,10 +168,8 @@ export default {
         .then(response => {
           this.postForm = response.data
           this.userListOptions.push(this.postForm.author)
-          // set tagsview title
           this.setTagsViewTitle()
 
-          // set page title
           this.setPageTitle()
         })
         .catch(err => this.$message.error(err.message))
@@ -240,24 +207,6 @@ export default {
         }
       })
     },
-    // draftForm() {
-    //   if (this.postForm.content.length === 0 || this.postForm.title.length === 0) {
-    //     this.$message({
-    //       message: '请填写必要的标题和内容',
-    //       type: 'warning'
-    //     })
-    //     return
-    //   }
-    //   this.postForm.status = 'draft'
-    //   addGuide(this.postForm).then(res => {
-    //     this.$message({
-    //       message: '保存成功',
-    //       type: 'success',
-    //       showClose: true,
-    //       duration: 1000
-    //     })
-    //   })
-    // },
     getUserList(query) {
       if (!query.trim()) return
       searchUser(query)

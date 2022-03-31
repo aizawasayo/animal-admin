@@ -16,7 +16,7 @@
         </el-col>
         <el-col :span="24">
           <el-form-item label="照片" prop="photoSrc">
-            <upload-multi ref="upload" drag :list="newDesign.photoSrc" dialogWidth="50%" />
+            <upload-multi ref="upload" drag :list="newDesign.photoSrc" dialog-width="50%" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -57,7 +57,8 @@ export default {
       }
     },
     tabList: {
-      type: Array
+      type: Array,
+      default: () => []
     }
   },
   data() {
@@ -77,11 +78,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId']) //推荐这种
+    ...mapGetters(['userId'])
   },
   watch: {
     design: {
-      //immediate: true,
       handler(val) {
         if (val.name) {
           this.newDesign = val

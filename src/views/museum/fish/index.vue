@@ -242,7 +242,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-single v-model="newFish.photoSrc" dialogWidth="30%" />
+              <upload-single v-model="newFish.photoSrc" dialog-width="30%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -272,8 +272,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -354,29 +354,21 @@ export default {
       })
     },
     selectAll(val, prop) {
-      let allValues = []
-      // 保留所有值
-      for (let item of this.monthList) {
+      const allValues = []
+      for (const item of this.monthList) {
         allValues.push(item.value)
       }
-      // 用来储存上一次的值，可以进行对比
       const oldVal = this.oldOptions[prop].length === 0 ? [] : this.oldOptions[prop][1]
-      // 如果有点全选,该赋值数组全部项
       if (val.includes('全年')) this.newFish.activeTime[prop] = allValues
-      // 取消全部选中  上次有 当前没有 表示取消全选
       if (oldVal.includes('全年') && !val.includes('全年')) this.newFish.activeTime[prop] = []
-      // 点击非全部选中  需要排除全部选中 以及 当前点击的选项
-      // 新老数据都有全部选中
       if (oldVal.includes('全年') && val.includes('全年')) {
         const index = val.indexOf('全年')
-        val.splice(index, 1) // 排除全选选项
+        val.splice(index, 1)
         this.newFish.activeTime[prop] = val
       }
-      // 全选未选 但是其他选项全部选上 则全选选上 上次和当前 都没有全选
       if (!oldVal.includes('全年') && !val.includes('全年')) {
         if (val.length === allValues.length - 1) this.newFish.activeTime[prop] = ['全年'].concat(val)
       }
-      // 储存当前最后的结果 作为下次的老数据
       this.oldOptions[prop][1] = this.newFish.activeTime[prop]
     },
     postFish() {
@@ -388,17 +380,6 @@ export default {
     },
     handleEdit(id) {
       this.commonApi.openEditForm(id, 'fish', getFish, this)
-      // if (this.$refs['newFishRef']) {
-      //   this.$refs['newFishRef'].resetFields()
-      // }
-      // getFish(id)
-      //   .then(res => {
-      //     this.dialogAddVisible = true
-      //     this.$nextTick(function () {
-      //       this.newFish = res.data
-      //     })
-      //   })
-      //   .catch(err => this.$message.error(err.message))
     },
     handleDelete(id) {
       this.commonApi.deleteById(id, deleteFish, this.fetchData)

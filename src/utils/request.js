@@ -42,7 +42,7 @@ service.interceptors.response.use(
    */
   response => {
     const res = response.data
-    const statusCode = res.code || response.status  // 直接获取http相应码而不再去data里获取code
+    const statusCode = res.code || response.status // 直接获取http相应码而不再去data里获取code
     // 响应码不是200, 解析返回的错误
     if (statusCode !== 200) { // 服务端自定义错误信息字段为 message
       // Message({ message: res.message || 'Error', type: 'error', duration: 5 * 1000 })

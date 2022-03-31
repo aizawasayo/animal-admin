@@ -117,28 +117,28 @@
               <el-switch v-model="newTrade.isLineup"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL">
+          <el-col v-show="isLineBL" :span="8">
             <el-form-item label="是否公开" prop="isPublic">
               <el-switch v-model="newTrade.isPublic"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL">
+          <el-col v-show="isLineBL" :span="8">
             <el-form-item label="自动叫号" prop="isAuto">
               <el-switch v-model="newTrade.isAuto"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL && isAutoBL">
+          <el-col v-show="isLineBL && isAutoBL" :span="8">
             <el-form-item label="最大登岛人数限制" prop="maxPeople" label-width="120">
               <el-input-number v-model="newTrade.maxPeople" :min="1" label="描述文字"></el-input-number>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL && isAutoBL">
+          <el-col v-show="isLineBL && isAutoBL" :span="8">
             <el-form-item label="登岛超时时间" prop="maxTime" label-width="120">
               <el-input-number v-model="newTrade.maxTime" :min="1" label="描述文字"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="16">
-            <el-form-item label="联系方式" prop="contact" v-show="!isLineBL">
+            <el-form-item v-show="!isLineBL" label="联系方式" prop="contact">
               <el-radio-group v-model="newTrade.contact">
                 <el-radio label="SW">SW</el-radio>
                 <el-radio label="微信">微信</el-radio>
@@ -147,12 +147,12 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="!isLineBL">
+          <el-col v-show="!isLineBL" :span="8">
             <el-form-item :label="newTrade.contact" prop="contactDetail">
               <el-input v-model="newTrade.contactDetail" :placeholder="'请输人' + contact" />
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL">
+          <el-col v-show="isLineBL" :span="8">
             <el-form-item label="开岛密码" prop="psw">
               <el-input v-model="newTrade.psw" placeholder="请输入开岛密码" />
             </el-form-item>
@@ -181,8 +181,7 @@ export default {
   name: 'Trade',
   filters: {
     statusFilter(time) {
-      let status = time > timestamp() ? 'success' : 'info'
-      return status
+      return time > timestamp() ? 'success' : 'info'
     }
   },
   data() {
@@ -191,8 +190,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -229,16 +228,16 @@ export default {
       ],
       newTrade: {
         user: '',
-        exchangeType: '', // 交易类型，我有菜/我有价
+        exchangeType: '',
         validTime: null,
-        isLineup: true, //是否排队模式
-        isPublic: true, //是否公开
-        isAuto: true, //自动叫号
-        maxPeople: 2, // 登岛人数限制
-        maxTime: 10, // 登岛最长时间 单位（分钟）
-        contact: 'SW', // 联系方式
-        contactDetail: '', //详细联系方式
-        detail: '', // 上岛说明
+        isLineup: true,
+        isPublic: true,
+        isAuto: true,
+        maxPeople: 2,
+        maxTime: 10,
+        contact: 'SW',
+        contactDetail: '',
+        detail: '',
         psw: ''
       },
       newTradeRules: {
@@ -248,7 +247,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userId', 'roles']), //推荐这种
+    ...mapGetters(['userId', 'roles']),
     isLineBL() {
       let bl = false
       this.newTrade.isLineup === true ? (bl = true) : (bl = false)
@@ -280,17 +279,16 @@ export default {
     },
     openAddTrade() {
       this.dialogAddVisible = true
-      // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
       this.$nextTick(function () {
         this.$refs['newTradeRef'].resetFields()
         if (!this.newTrade._id) {
-          let time = new Date()
-          let yy = time.getFullYear()
-          let month = time.getMonth() // 月份
-          let dd = time.getDate() // 日
-          let hh = time.getHours() + 2
-          let mm = time.getMinutes()
-          let val = new Date(yy, month, dd, hh, mm)
+          const time = new Date()
+          const yy = time.getFullYear()
+          const month = time.getMonth()
+          const dd = time.getDate()
+          const hh = time.getHours() + 2
+          const mm = time.getMinutes()
+          const val = new Date(yy, month, dd, hh, mm)
           this.newTrade.validTime = val
           this.$forceUpdate()
         }
@@ -316,8 +314,7 @@ export default {
           this.dialogAddVisible = true
           this.$nextTick(function () {
             this.newTrade = res.data
-            let newStr = this.newTrade.exchangeType.split('-')
-            this.newTrade.exchangeType = newStr
+            this.newTrade.exchangeType = this.newTrade.exchangeType.split('-')
             this.newTrade.validTime = standardTime(this.newTrade.validTime)
           })
         })

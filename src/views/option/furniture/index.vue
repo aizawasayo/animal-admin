@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -16,7 +16,6 @@ export default {
         { label: '家具系列', key: 'series' },
         { label: '家具尺寸', key: 'size' }
       ],
-      //tabIndex:0,
       activeName: 'furnitureType'
     }
   },

@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -16,7 +16,6 @@ export default {
         { label: '季节', key: 'season' },
         { label: '话题', key: 'topic' }
       ],
-      //tabIndex:0,
       activeName: 'rarity'
     }
   },

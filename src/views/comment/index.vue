@@ -1,5 +1,5 @@
 <template>
-  <comment-index :tabOptions="tabOptions" :activeTab="activeName"></comment-index>
+  <comment-index :tab-options="tabOptions" :active-tab="activeName"></comment-index>
 </template>
 
 <script>

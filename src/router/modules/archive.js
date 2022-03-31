@@ -12,7 +12,8 @@ const archiveRouter = {
     icon: 'component',
     roles: ['admin']
   },
-  children: [{
+  children: [
+    {
       path: 'furniture',
       component: () => import('@/views/archive/furniture'),
       name: 'Furniture',
@@ -81,7 +82,7 @@ const archiveRouter = {
         icon: 'record',
         roles: ['admin']
       }
-    },
+    }
   ]
 }
 export default archiveRouter

@@ -155,7 +155,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-single v-model="newTool.photoSrc" dialogWidth="30%" drag />
+              <upload-single v-model="newTool.photoSrc" dialog-width="30%" drag />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -186,8 +186,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -199,20 +199,18 @@ export default {
         price: null,
         engName: '',
         jpnName: '',
-        durability: null, //耐久度
-        isDIY: null, //是否可DIY制作
+        durability: null,
+        isDIY: null,
         activity: '',
         channels: [],
-        channelDetail: '', //获取途径详情
+        channelDetail: '',
         photoSrc: ''
       },
       isDIYList: [
         { text: '可以DIY制作', value: true },
         { text: '不可以DIY制作', value: false }
       ],
-      channelList: [
-        //获取途径
-      ],
+      channelList: [],
       activityList: [],
       newToolRules: {
         name: [{ required: true, message: '请填写工具名', trigger: 'blur' }]

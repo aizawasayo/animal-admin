@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -15,7 +15,6 @@ export default {
         { label: 'DIY来源', key: 'diyChannels' },
         { label: '解锁数量要求', key: 'diyUnlock' }
       ],
-      //tabIndex:0,
       activeName: 'diyType'
     }
   },

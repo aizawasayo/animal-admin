@@ -1,5 +1,5 @@
 <template>
-  <option-index :tabOptions="tabOptions" :activeTab="activeName"></option-index>
+  <option-index :tab-options="tabOptions" :active-tab="activeName"></option-index>
 </template>
 
 <script>
@@ -14,7 +14,6 @@ export default {
         { label: '昆虫出现场所', key: 'insectLocale' },
         { label: '解锁数量要求', key: 'insectUnlock' }
       ],
-      //tabIndex:0,
       activeName: 'insectLocale'
     }
   },

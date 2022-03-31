@@ -125,33 +125,33 @@
               </el-time-picker>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isPrice">
+          <el-col v-show="isPrice" :span="8">
             <el-form-item label="排队模式" prop="isLineup">
               <el-switch v-model="newTurnip.isLineup"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL">
+          <el-col v-show="isLineBL" :span="8">
             <el-form-item label="是否公开" prop="isPublic">
               <el-switch v-model="newTurnip.isPublic"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL">
+          <el-col v-show="isLineBL" :span="8">
             <el-form-item label="自动叫号" prop="isAuto">
               <el-switch v-model="newTurnip.isAuto"></el-switch>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL && isAutoBL">
+          <el-col v-show="isLineBL && isAutoBL" :span="8">
             <el-form-item label="最大登岛人数限制" prop="maxPeople" label-width="120">
               <el-input-number v-model="newTurnip.maxPeople" :min="1" label="描述文字"></el-input-number>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isLineBL && isAutoBL">
+          <el-col v-show="isLineBL && isAutoBL" :span="8">
             <el-form-item label="登岛超时时间" prop="maxTime" label-width="120">
               <el-input-number v-model="newTurnip.maxTime" :min="1" label="描述文字"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="16">
-            <el-form-item label="联系方式" prop="contact" v-show="!isPsw">
+            <el-form-item v-show="!isPsw" label="联系方式" prop="contact">
               <el-radio-group v-model="newTurnip.contact">
                 <el-radio label="SW">SW</el-radio>
                 <el-radio label="微信">微信</el-radio>
@@ -160,12 +160,12 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="!isPsw">
+          <el-col v-show="!isPsw" :span="8">
             <el-form-item :label="newTurnip.contact" prop="contactDetail">
               <el-input v-model="newTurnip.contactDetail" :placeholder="'请输人' + contact" />
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isPsw">
+          <el-col v-show="isPsw" :span="8">
             <el-form-item label="开岛密码" prop="psw">
               <el-input v-model="newTurnip.psw" placeholder="请输入开岛密码" />
             </el-form-item>
@@ -188,13 +188,13 @@
 <script>
 import { mapGetters } from 'vuex'
 import { getTurnipList, addTurnip, getTurnip, deleteTurnip } from '@/api/turnip'
-import { timestamp, parseTime, standardTime } from '@/utils'
+import { timestamp, parseTime } from '@/utils'
 
 export default {
   name: 'Turnip',
   filters: {
     statusFilter(time) {
-      let status = time > timestamp() ? 'success' : 'info'
+      const status = time > timestamp() ? 'success' : 'info'
       return status
     }
   },
@@ -204,8 +204,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -219,16 +219,16 @@ export default {
       newTurnip: {
         price: null,
         user: '',
-        exchangeType: '我有价', // 交易类型，我有菜/我有价
+        exchangeType: '我有价',
         validTime: null,
-        isLineup: true, //是否排队模式
-        isPublic: true, //是否公开
-        isAuto: true, //自动叫号
-        maxPeople: 2, // 登岛人数限制
-        maxTime: 10, // 登岛最长时间 单位（分钟）
-        contact: 'SW', // 联系方式
-        contactDetail: '', //详细联系方式
-        detail: '', // 上岛说明
+        isLineup: true,
+        isPublic: true,
+        isAuto: true,
+        maxPeople: 2,
+        maxTime: 10,
+        contact: 'SW',
+        contactDetail: '',
+        detail: '',
         psw: ''
       },
       newTurnipRules: {
@@ -292,8 +292,8 @@ export default {
     nowVaildTime() {
       const time = new Date()
       const yy = time.getFullYear()
-      const month = time.getMonth() // 月份
-      const dd = time.getDate() // 日
+      const month = time.getMonth()
+      const dd = time.getDate()
       const hh = time.getHours() + 2
       const mm = time.getMinutes()
       const val = new Date(yy, month, dd, hh, mm)
@@ -319,7 +319,6 @@ export default {
           this.dialogAddVisible = true
           this.$nextTick(function () {
             this.newTurnip = res.data
-            //this.newTurnip.validTime = standardTime(this.newTurnip.validTime)
             this.newTurnip.validTime = this.nowVaildTime()
           })
         })

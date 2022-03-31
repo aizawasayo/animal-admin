@@ -22,10 +22,10 @@
       </el-col>
     </el-row>
     <el-tabs v-model="activeName" style="margin-top: 15px;" type="card">
-      <el-tab-pane v-for="(item, i) in tabOptions" :key="item.key" :label="item.label" :name="item.key">
+      <el-tab-pane v-for="item in tabOptions" :key="item.key" :label="item.label" :name="item.key">
         <span slot="label"> {{ item.label }} </span>
         <keep-alive>
-          <comment-list ref="designList" :type="item.key" :queryKey="queryKey" />
+          <comment-list ref="designList" :type="item.key" :query-key="queryKey" />
         </keep-alive>
       </el-tab-pane>
     </el-tabs>
@@ -74,7 +74,6 @@ export default {
       this.$refs.designList[this.tabIndex].handelMultipleDelete()
     },
     fetchCommentData() {
-      // this.$refs.designList[this.tabIndex].fetchData()
       this.$refs.optionList.forEach(item => item.fetchData())
     },
     hideDialog() {

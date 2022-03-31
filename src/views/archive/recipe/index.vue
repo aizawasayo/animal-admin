@@ -141,14 +141,14 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isNpc">
+          <el-col v-show="isNpc" :span="8">
             <el-form-item label="NPC" prop="npc">
               <el-select v-model="newRecipe.npc" placeholder="请选择来源npc">
                 <el-option v-for="item in npcList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8" v-show="isIslander">
+          <el-col v-show="isIslander" :span="8">
             <el-form-item label="岛民性格" prop="character">
               <el-select v-model="newRecipe.character" placeholder="请选择来源岛民性格">
                 <el-option v-for="item in characterList" :key="item.value" :label="item.text" :value="item.value"> </el-option>
@@ -188,7 +188,7 @@
           <el-col :span="4">
             <el-form-item label="合成配方" prop="materials" label-width="80px"> </el-form-item>
           </el-col>
-          <el-col :span="10" v-for="(item, i) in newRecipe.materials" :key="'materials' + i">
+          <el-col v-for="(item, i) in newRecipe.materials" :key="'materials' + i" :span="10">
             <el-form-item :label="'材料' + (i + 1)" prop="" label-width="80px">
               <el-col :span="12">
                 <el-select
@@ -216,7 +216,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="照片" prop="photoSrc">
-              <upload-single v-model="newRecipe.photoSrc" dialogWidth="30%" drag />
+              <upload-single v-model="newRecipe.photoSrc" dialog-width="30%" drag />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -239,7 +239,6 @@ import { getRecipes, addRecipe, getRecipe, deleteRecipe, searchRecipe } from '@/
 import { searchMaterial } from '@/api/material'
 import { searchFurniture } from '@/api/furniture'
 import { searchClothing } from '@/api/clothing'
-//import { searchTool } from '@/api/tool'
 import getOption from '@/utils/get-option'
 
 export default {
@@ -251,8 +250,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -296,9 +295,7 @@ export default {
         { text: '健兆', value: '健兆' },
         { text: '阿獭', value: '阿獭' }
       ],
-      channelList: [
-        //获取途径
-      ],
+      channelList: [],
       unlockConditionList: [
         { text: '无', value: '' },
         { text: '总DIY数量满50次', value: '50' },
@@ -316,12 +313,10 @@ export default {
   },
   computed: {
     isNpc() {
-      let isNpc = this.newRecipe.channels.includes('NPC')
-      return isNpc
+      return this.newRecipe.channels.includes('NPC')
     },
     isIslander() {
-      let isIslander = this.newRecipe.channels.includes('岛民')
-      return isIslander
+      return this.newRecipe.channels.includes('岛民')
     }
   },
   created() {
@@ -342,9 +337,7 @@ export default {
       getOption('size', list => {
         this.sizeList = list
       })
-      getOption('diyUnlock', list => {
-        //this.sizeList = list
-      })
+      getOption('diyUnlock', list => {})
       getOption('season', list => {
         this.seasonList = list
       })

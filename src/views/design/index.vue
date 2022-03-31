@@ -1,5 +1,5 @@
 <template>
-  <design-index :tabOptions="tabOptions" :activeTab="activeName"></design-index>
+  <design-index :tab-options="tabOptions" :active-tab="activeName"></design-index>
 </template>
 
 <script>

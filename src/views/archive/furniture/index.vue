@@ -208,12 +208,10 @@
 </template>
 
 <script>
-import { getFurnitureList, addFurniture, getFurniture, deleteFurniture, searchFurniture } from '@/api/furniture'
+import { getFurnitureList, addFurniture, getFurniture, deleteFurniture } from '@/api/furniture'
 import getOption from '@/utils/get-option'
-import MultiUpload from '@/components/Upload/MultiUpload.vue'
 
 export default {
-  components: { MultiUpload },
   name: 'Furniture',
   filters: {},
   data() {
@@ -222,8 +220,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -236,14 +234,14 @@ export default {
         jpnName: '',
         price: null,
         type: ['家具'],
-        remould: '多颜色', // 能否改造
-        orderType: '订购', //订购类型
+        remould: '多颜色',
+        orderType: '订购',
         character: '',
-        series: '', //所属系列
-        size: '1.0×1.0', //占地面积
+        series: '',
+        size: '1.0×1.0',
         activity: '',
-        channels: ['Nook商店'], //获取途径
-        channelDetail: '', //获取途径详情
+        channels: ['Nook商店'],
+        channelDetail: '',
         photoSrc: []
       },
       typeList: [],
@@ -272,9 +270,7 @@ export default {
         { text: '健兆', value: '健兆' },
         { text: '阿獭', value: '阿獭' }
       ],
-      channelList: [
-        //获取途径
-      ],
+      channelList: [],
       newFurnitureRules: {
         name: [
           { required: true, message: '请输入家具名', trigger: 'blur' },

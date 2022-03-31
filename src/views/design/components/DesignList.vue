@@ -53,10 +53,12 @@ export default {
   name: 'DesignList',
   props: {
     type: {
-      type: String
+      type: String,
+      default: ''
     },
     queryKey: {
-      type: String
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -65,8 +67,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: this.queryKey,
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         type: this.type,
         sortJson: {},
         sort: ''
@@ -76,13 +78,13 @@ export default {
       multipleSelection: []
     }
   },
+  computed: {
+    ...mapGetters(['userId', 'roles'])
+  },
   watch: {
     queryKey(newVal) {
       this.queryInfo.query = newVal
     }
-  },
-  computed: {
-    ...mapGetters(['userId', 'roles']) //推荐这种
   },
   created() {
     this.fetchData()

@@ -141,7 +141,7 @@
           <el-col :span="8">
             <el-form-item label="性别" prop="sex">
               <el-radio-group v-model="newIslander.sex">
-                <el-radio v-for="item in sexList" :label="item.value">{{ item.text }}</el-radio>
+                <el-radio v-for="(item, i) in sexList" :key="item.value + i" :label="item.value">{{ item.text }}</el-radio>
                 <!-- <el-radio :label="0">♀</el-radio> -->
               </el-radio-group>
             </el-form-item>
@@ -149,7 +149,7 @@
           <el-col :span="8">
             <el-form-item label="种族" prop="breed">
               <el-select v-model="newIslander.breed" placeholder="请选择种族">
-                <el-option v-for="item in breedList" :label="item.text" :value="item.value" />
+                <el-option v-for="(item, i) in breedList" :key="item.value + i" :label="item.text" :value="item.value" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -182,28 +182,28 @@
           <el-col :span="8">
             <el-form-item label="性格" prop="character">
               <el-select v-model="newIslander.character" placeholder="请选择性格">
-                <el-option v-for="item in characterList" :label="item.text" :value="item.value" />
+                <el-option v-for="(item, i) in characterList" :key="item.value + i" :label="item.text" :value="item.value" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="性格亚型" prop="subtype">
               <el-select v-model="newIslander.subtype" placeholder="请选择性格亚型">
-                <el-option v-for="item in subtypeList" :label="item.text" :value="item.value" />
+                <el-option v-for="(item, i) in subtypeList" :key="item.value + i" :label="item.text" :value="item.value" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="爱好" prop="hobby">
               <el-select v-model="newIslander.hobby" placeholder="请选择爱好">
-                <el-option v-for="item in hobbyList" :label="item.text" :value="item.value" />
+                <el-option v-for="(item, i) in hobbyList" :key="item.value + i" :label="item.text" :value="item.value" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="音高" prop="voice">
               <el-select v-model="newIslander.voice" placeholder="请选择音高">
-                <el-option v-for="item in voiceList" :label="item.text" :value="item.value" />
+                <el-option v-for="(item, i) in voiceList" :key="item.value + i" :label="item.text" :value="item.value" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -257,13 +257,11 @@
 </template>
 
 <script>
-// import Pagination from '@/components/Pagination'
 import { getIslanders, addIslander, getIslander, deleteIslander } from '@/api/islander'
 import getOption from '@/utils/get-option'
 
 export default {
   name: 'Islander',
-  // components: { Pagination },
   data() {
     const checkMonth = (rule, value, callback) => {
       if (!value) {
@@ -292,8 +290,8 @@ export default {
       listLoading: true,
       queryInfo: {
         query: '',
-        page: 1, // 当前的页数
-        pageSize: 10, // 当前每页显示多少条数据
+        page: 1,
+        pageSize: 10,
         sortJson: {},
         sort: ''
       },
@@ -303,7 +301,7 @@ export default {
       newIslander: {
         name: '',
         sex: null,
-        breed: '', // 种族
+        breed: '',
         month: null,
         date: null,
         birth: '',
@@ -363,7 +361,6 @@ export default {
     this.fetchData()
     this.getOptions()
   },
-  computed: {},
   methods: {
     fetchData(param) {
       this.commonApi.getList(param, getIslanders, this)
@@ -383,51 +380,8 @@ export default {
       })
     },
     changeVal(e) {
-      //强制刷新数据
       this.$forceUpdate()
     },
-    // handleSizeChange(newSize) {
-    //   // 监听每页条数的改变
-    //   this.queryInfo.pageSize = newSize
-    //   this.fetchData()
-    // },
-    // handleCurrentChange(newPage) {
-    //   // 监听页码值改变
-    //   this.queryInfo.page = newPage
-    //   this.fetchData()
-    // },
-    // handleRemove(file) {
-    //   this.newIslander.photoSrc = ''
-    // },
-    // handleSuccess(res) {
-    //   // 图片上传成功后把临时地址保存到表单photoSrc属性中
-    //   this.newIslander.photoSrc = this.commonApi.uploadSuccess(res)
-    // },
-    // handleError(err) {
-    //   this.$message({ message: err.message, type: 'error' })
-    // },
-    // openAddIslander() {
-    //   // 打开新增岛民弹窗并重置表单
-    //   this.dialogAddVisible = true
-    //   // 用 this.nextTick 或者用个定时器来确保 dom 渲染并更新
-    //   this.$nextTick(function () {
-    //     // 打开新增弹窗后先重置表单 避免表单出现上一次新增的校验数据
-    //     this.$refs['newIslanderRef'].resetFields()
-    //   })
-    // },
-    // dialogAddClose() {
-    //   this.$refs.newIslanderRef.resetFields()
-    //   this.$refs.upload.clearFiles()
-    //   delete this.newIslander._id
-    //   delete this.newIslander.__v
-    //   // for (let key of Object.keys(this.newIslander)) {
-    //   //   if (key === 'sex') {
-    //   //     this.newIslander[key] = null
-    //   //   } else {
-    //   //     this.newIslander[key] = ""
-    //   //   }
-    //   // }
-    // },
     postIslander() {
       this.newIslander.birth = this.newIslander.month + '月' + this.newIslander.date + '日'
       this.newIslander.monthStr = this.newIslander.month + '月'
@@ -437,7 +391,6 @@ export default {
       if (this.$refs['newIslanderRef']) {
         this.$refs['newIslanderRef'].resetFields()
       }
-      // 查询并编辑岛民信息
       getIslander(id)
         .then(res => {
           this.dialogAddVisible = true

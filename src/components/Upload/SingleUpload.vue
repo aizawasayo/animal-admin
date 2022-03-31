@@ -149,7 +149,7 @@ export default {
   .el-upload-list--text {
     margin: 6px 0 0 10px;
   }
-  .image-uploader >>> .el-upload-dragger {
+  .image-uploader /deep/ .el-upload-dragger {
     width: 150px;
     height: 150px;
   }
@@ -160,10 +160,10 @@ export default {
     margin: 0;
   }
 }
-.preview-dialog >>> .el-dialog__header {
+.preview-dialog /deep/ .el-dialog__header {
   padding: 0;
 }
-.preview-dialog >>> .el-dialog__body {
+.preview-dialog /deep/ .el-dialog__body {
   padding: 20px;
 }
 </style>
